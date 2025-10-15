@@ -1,0 +1,9 @@
+
+📊 REPORTE DE RENDIMIENTO - PACMAN IA sin fantasmas
+
+Puntos recolectados: 140/140
+Pasos totales: 329
+Duración total: 49.00 segundos
+Velocidad promedio: 2.86 puntos por segundo
+
+Fecha de ejecución: 2025-10-15 16:54:33
