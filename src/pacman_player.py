@@ -1,5 +1,8 @@
 import pygame
 import sys
+import os
+import time
+from collections import deque
 
 # Inicialización de pygame
 pygame.init()
@@ -14,6 +17,10 @@ NEGRO = (0, 0, 0)
 AZUL = (33, 33, 255)
 AMARILLO = (255, 255, 0)
 BLANCO = (255, 255, 255)
+
+# Crear carpeta de rendimiento si no existe
+ruta_performance = r"C:\Users\scozi\PycharmProjects\PacmanLab_IvanV_CristianV_ComplejidadAlgoritmos\performance"
+os.makedirs(ruta_performance, exist_ok=True)
 
 # Crear ventana
 pantalla = pygame.display.set_mode((ANCHO, ALTO))
@@ -65,6 +72,10 @@ def dibujar_mapa():
 direccion = None
 puntos_recolectados = 0
 
+# --- MÉTRICAS DE RENDIMIENTO ---
+inicio_tiempo = time.time()
+pasos_totales = 0
+
 ejecutando = True
 while ejecutando:
     reloj.tick(FPS)
@@ -108,15 +119,40 @@ while ejecutando:
 
     # Mostrar puntaje
     fuente = pygame.font.SysFont("arial", 24)
-    texto = fuente.render(f"Puntos: {puntos_recolectados}/{puntos_totales}", True, BLANCO)
+    texto = fuente.render(f"Puntos: {puntos_recolectados}/{punto_totales}", True, BLANCO)
     pantalla.blit(texto, (10, ALTO - 30))
 
     # Verificar victoria
     if puntos_restantes == 0:
-        mensaje = fuente.render("¡Has recolectado los 244 puntos! 🎉", True, AMARILLO)
+        mensaje = fuente.render("¡Has recolectado los 140 puntos!", True, AMARILLO)
         pantalla.blit(mensaje, (ANCHO//2 - 220, ALTO//2))
         pygame.display.flip()
         pygame.time.wait(3000)
         ejecutando = False
 
     pygame.display.flip()
+
+# --- FIN DEL JUEGO: GUARDAR REPORTE ---
+
+fin_tiempo = time.time()
+duracion = fin_tiempo - inicio_tiempo
+
+reporte = f"""
+REPORTE DE RENDIMIENTO - PACMAN IA sin fantasmas
+
+Puntos recolectados: {puntos_recolectados}/{puntos_totales}
+Pasos totales: {pasos_totales}
+Duración total: {duracion:.2f} segundos
+Velocidad promedio: {puntos_recolectados/duracion:.2f} puntos por segundo
+
+Fecha de ejecución: {time.strftime("%Y-%m-%d %H:%M:%S")}
+"""
+
+# Guardar en carpeta performance
+fecha_ejecucion = time.strftime("%Y-%m-%d_%H-%M-%S")
+ruta_reporte = os.path.join(ruta_performance, f"reporte_pacman_jugador_{fecha_ejecucion}.txt")
+with open(ruta_reporte, "w", encoding="utf-8") as f:
+    f.write(reporte)
+
+print(f"Reporte guardado en: {ruta_reporte}")
+print(reporte)
