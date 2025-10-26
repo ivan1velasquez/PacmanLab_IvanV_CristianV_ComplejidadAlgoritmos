@@ -113,7 +113,7 @@ def mostrar_resultado(pantalla, puntos, totales, pasos, duracion, vivo):
     reloj = pygame.time.Clock()
     velocidad = puntos / duracion if duracion > 0 else 0
     lineas = [
-        "¡Nivel completado! 🎉" if vivo else "Pac-Man fue atrapado 😵",
+        "¡Nivel completado!" if vivo else "Pac-Man fue atrapado",
         f"Puntos recolectados: {puntos}/{totales}",
         f"Pasos totales: {pasos}",
         f"Duración total: {duracion:.2f} seg",
