@@ -1,158 +1,132 @@
-import pygame
-import sys
-import os
-import time
-from collections import deque
+import pygame, os, time
 
-# Inicialización de pygame
-pygame.init()
+def ejecutar_juego_player():
+    pygame.init()
+    ANCHO, ALTO, TAM = 560, 620, 20
+    NEGRO, AZUL, AMARILLO, BLANCO = (0,0,0),(33,33,255),(255,255,0),(255,255,255)
+    pantalla = pygame.display.set_mode((ANCHO, ALTO))
+    pygame.display.set_caption("Pac-Man - Modo Jugador")
 
-# Constantes
-ANCHO, ALTO = 560, 620  # tamaño de la ventana (similar al clásico)
-TAM_CELDA = 20
-FPS = 10
+    # --- Ruta de reportes ---
+    ruta_base = os.path.dirname(os.path.dirname(__file__))  # .../PacmanLab
+    ruta_performance = os.path.join(ruta_base, "results", "performance")
+    os.makedirs(ruta_performance, exist_ok=True)
 
-# Colores
-NEGRO = (0, 0, 0)
-AZUL = (33, 33, 255)
-AMARILLO = (255, 255, 0)
-BLANCO = (255, 255, 255)
+    # --- Mapa ---
+    mapa = [
+        "1111111111111111111111111111",
+        "1000000000110000000000000001",
+        "1011111110110111111111111101",
+        "1011111110110111111111111101",
+        "1000000000000000000000000001",
+        "1011110111111111110111111101",
+        "1000000100000000000100000001",
+        "1111110110111111010111111111",
+        "1000000000001111000000000001",
+        "1011111111111111111111111101",
+        "1000000000000000000000000001",
+        "1111111111111111111111111111",
+    ]
+    mapa = [list(f) for f in mapa]
 
-# Crear carpeta de rendimiento si no existe
-ruta_performance = r"C:\Users\scozi\PycharmProjects\PacmanLab_IvanV_CristianV_ComplejidadAlgoritmos\performance"
-os.makedirs(ruta_performance, exist_ok=True)
+    pacman_x, pacman_y = 1, 1
+    puntos_totales = sum(f.count("0") for f in mapa)
+    puntos = 0
+    pasos = 0
+    direccion = None
+    reloj = pygame.time.Clock()
+    inicio = time.time()
 
-# Crear ventana
-pantalla = pygame.display.set_mode((ANCHO, ALTO))
-pygame.display.set_caption("Pac-Man Jugador :v")
+    def dibujar_mapa():
+        for y, fila in enumerate(mapa):
+            for x, c in enumerate(fila):
+                if c == "1":
+                    pygame.draw.rect(pantalla, AZUL, (x*TAM, y*TAM, TAM, TAM))
+                elif c == "0":
+                    pygame.draw.circle(pantalla, BLANCO, (x*TAM+TAM//2, y*TAM+TAM//2), 3)
 
-# Reloj
-reloj = pygame.time.Clock()
+    # --- Juego principal ---
+    while True:
+        reloj.tick(12)
+        for e in pygame.event.get():
+            if e.type == pygame.QUIT:
+                pygame.display.quit()
+                return
+            elif e.type == pygame.KEYDOWN:
+                if e.key == pygame.K_UP: direccion = "UP"
+                elif e.key == pygame.K_DOWN: direccion = "DOWN"
+                elif e.key == pygame.K_LEFT: direccion = "LEFT"
+                elif e.key == pygame.K_RIGHT: direccion = "RIGHT"
 
-# Mapa simple con paredes (1) y caminos (0)
-# 28 columnas x 31 filas ≈ 868 celdas, con puntos en los 244 caminos
-mapa = [
-"1111111111111111111111111111",
-"1000000000110000000000000001",
-"1011111110110111111111111101",
-"1011111110110111111111111101",
-"1000000000000000000000000001",
-"1011110111111111110111111101",
-"1000000100000000000100000001",
-"1111110110111111010111111111",
-"1000000000001111000000000001",
-"1011111111111111111111111101",
-"1000000000000000000000000001",
-"1111111111111111111111111111",
-]
+        nx, ny = pacman_x, pacman_y
+        if direccion == "UP": ny -= 1
+        if direccion == "DOWN": ny += 1
+        if direccion == "LEFT": nx -= 1
+        if direccion == "RIGHT": nx += 1
 
-# Convertir mapa a lista de listas
-mapa = [list(fila) for fila in mapa]
+        if mapa[ny][nx] != "1":
+            pacman_x, pacman_y = nx, ny
+            pasos += 1
+            if mapa[ny][nx] == "0":
+                mapa[ny][nx] = " "
+                puntos += 1
 
-# Posición inicial del Pac-Man
-pacman_x, pacman_y = 1, 1
-
-# Contador de puntos
-puntos_totales = 0
-for fila in mapa:
-    puntos_totales += fila.count('0')  # puntos disponibles
-
-puntos_restantes = puntos_totales
-
-# Función para dibujar el mapa
-def dibujar_mapa():
-    for y, fila in enumerate(mapa):
-        for x, celda in enumerate(fila):
-            if celda == '1':  # pared
-                pygame.draw.rect(pantalla, AZUL, (x*TAM_CELDA, y*TAM_CELDA, TAM_CELDA, TAM_CELDA))
-            elif celda == '0':  # punto
-                pygame.draw.circle(pantalla, BLANCO, (x*TAM_CELDA+TAM_CELDA//2, y*TAM_CELDA+TAM_CELDA//2), 3)
-
-# Bucle principal del juego
-direccion = None
-puntos_recolectados = 0
-
-# --- MÉTRICAS DE RENDIMIENTO ---
-inicio_tiempo = time.time()
-pasos_totales = 0
-
-ejecutando = True
-while ejecutando:
-    reloj.tick(FPS)
-    for evento in pygame.event.get():
-        if evento.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
-        if evento.type == pygame.KEYDOWN:
-            if evento.key == pygame.K_UP:
-                direccion = "UP"
-            elif evento.key == pygame.K_DOWN:
-                direccion = "DOWN"
-            elif evento.key == pygame.K_LEFT:
-                direccion = "LEFT"
-            elif evento.key == pygame.K_RIGHT:
-                direccion = "RIGHT"
-
-    # Movimiento
-    nueva_x, nueva_y = pacman_x, pacman_y
-    if direccion == "UP": nueva_y -= 1
-    if direccion == "DOWN": nueva_y += 1
-    if direccion == "LEFT": nueva_x -= 1
-    if direccion == "RIGHT": nueva_x += 1
-
-    # Verificar colisiones con paredes
-    if mapa[nueva_y][nueva_x] != '1':
-        pacman_x, pacman_y = nueva_x, nueva_y
-
-        # Comer punto
-        if mapa[pacman_y][pacman_x] == '0':
-            mapa[pacman_y][pacman_x] = ' '  # celda vacía
-            puntos_recolectados += 1
-            puntos_restantes -= 1
-
-    # Dibujar todo
-    pantalla.fill(NEGRO)
-    dibujar_mapa()
-    pygame.draw.circle(pantalla, AMARILLO,
-                       (pacman_x*TAM_CELDA+TAM_CELDA//2, pacman_y*TAM_CELDA+TAM_CELDA//2),
-                       TAM_CELDA//2 - 2)
-
-    # Mostrar puntaje
-    fuente = pygame.font.SysFont("arial", 24)
-    texto = fuente.render(f"Puntos: {puntos_recolectados}/{punto_totales}", True, BLANCO)
-    pantalla.blit(texto, (10, ALTO - 30))
-
-    # Verificar victoria
-    if puntos_restantes == 0:
-        mensaje = fuente.render("¡Has recolectado los 140 puntos!", True, AMARILLO)
-        pantalla.blit(mensaje, (ANCHO//2 - 220, ALTO//2))
+        # --- Dibujo frame ---
+        pantalla.fill(NEGRO)
+        dibujar_mapa()
+        pygame.draw.circle(pantalla, AMARILLO, (pacman_x*TAM+TAM//2, pacman_y*TAM+TAM//2), TAM//2-2)
+        # Contador en tiempo real
+        fuente = pygame.font.SysFont("arial", 24)
+        texto = fuente.render(f"Puntos: {puntos}/{puntos_totales}", True, BLANCO)
+        pantalla.blit(texto, (10, ALTO - 30))
         pygame.display.flip()
-        pygame.time.wait(3000)
-        ejecutando = False
 
-    pygame.display.flip()
+        # Victoria
+        if puntos == puntos_totales:
+            duracion = time.time() - inicio
+            guardar_reporte("jugador", puntos, puntos_totales, pasos, duracion, "Completado", ruta_performance)
+            mostrar_resultado(pantalla, puntos, puntos_totales, pasos, duracion, vivo=True)
+            return
 
-# --- FIN DEL JUEGO: GUARDAR REPORTE ---
+def guardar_reporte(modo, puntos, totales, pasos, duracion, estado, ruta_base):
+    fecha_file = time.strftime("%Y-%m-%d_%H-%M-%S")
+    fecha_hum = time.strftime("%Y-%m-%d %H:%M:%S")
+    reporte = f"""REPORTE DE RENDIMIENTO - PACMAN {modo.upper()}
 
-fin_tiempo = time.time()
-duracion = fin_tiempo - inicio_tiempo
-
-reporte = f"""
-REPORTE DE RENDIMIENTO - PACMAN IA sin fantasmas
-
-Puntos recolectados: {puntos_recolectados}/{puntos_totales}
-Pasos totales: {pasos_totales}
+Estado: {estado}
+Puntos recolectados: {puntos}/{totales}
+Pasos totales: {pasos}
 Duración total: {duracion:.2f} segundos
-Velocidad promedio: {puntos_recolectados/duracion:.2f} puntos por segundo
-
-Fecha de ejecución: {time.strftime("%Y-%m-%d %H:%M:%S")}
+Velocidad promedio: {puntos/duracion:.2f} puntos/segundo
+Fecha de ejecución: {fecha_hum}
 """
+    ruta = os.path.join(ruta_base, f"reporte_pacman_{modo}_{fecha_file}.txt")
+    with open(ruta, "w", encoding="utf-8") as f:
+        f.write(reporte)
 
-# Guardar en carpeta performance
-fecha_ejecucion = time.strftime("%Y-%m-%d_%H-%M-%S")
-ruta_reporte = os.path.join(ruta_performance, f"reporte_pacman_jugador_{fecha_ejecucion}.txt")
-with open(ruta_reporte, "w", encoding="utf-8") as f:
-    f.write(reporte)
+def mostrar_resultado(pantalla, puntos, totales, pasos, duracion, vivo):
+    fuente = pygame.font.SysFont("arial", 24)
+    lineas = [
+        "¡Nivel completado! 🎉" if vivo else "Pac-Man fue atrapado 😵",
+        f"Puntos recolectados: {puntos}/{totales}",
+        f"Pasos totales: {pasos}",
+        f"Duración total: {duracion:.2f} seg",
+        f"Velocidad promedio: {puntos/duracion:.2f} pts/s",
+        "Presiona ENTER para volver al menú"
+    ]
+    esperando = True
+    while esperando:
+        for e in pygame.event.get():
+            if e.type == pygame.QUIT:
+                pygame.display.quit()
+                return
+            elif e.type == pygame.KEYDOWN and e.key == pygame.K_RETURN:
+                esperando = False
+                pygame.display.quit()
+                return
 
-print(f"Reporte guardado en: {ruta_reporte}")
-print(reporte)
+        pantalla.fill((0,0,0))
+        for i, t in enumerate(lineas):
+            txt = fuente.render(t, True, (255,255,0))
+            pantalla.blit(txt, (60, 200 + i*30))
+        pygame.display.flip()

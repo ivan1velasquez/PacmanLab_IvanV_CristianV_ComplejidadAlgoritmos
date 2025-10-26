@@ -1,176 +1,150 @@
-import pygame
-import sys
-import os
-import time
+import pygame, os, time
 from collections import deque
 
-pygame.init()
+def ejecutar_juego_ia_sin_fantasmas():
+    pygame.init()
+    ANCHO, ALTO, TAM = 560, 620, 20
+    NEGRO, AZUL, AMARILLO, BLANCO = (0,0,0),(33,33,255),(255,255,0),(255,255,255)
+    pantalla = pygame.display.set_mode((ANCHO, ALTO))
+    pygame.display.set_caption("Pac-Man - IA sin fantasmas")
 
-# Parámetros del juego
-ANCHO, ALTO = 560, 620
-TAM_CELDA = 20
-FPS = 10
+    # --- Ruta de reportes ---
+    ruta_base = os.path.dirname(os.path.dirname(__file__))  # .../PacmanLab
+    ruta_performance = os.path.join(ruta_base, "results", "performance")
+    os.makedirs(ruta_performance, exist_ok=True)
 
-# Colores
-NEGRO = (0, 0, 0)
-AZUL = (33, 33, 255)
-AMARILLO = (255, 255, 0)
-BLANCO = (255, 255, 255)
+    mapa = [
+        "1111111111111111111111111111",
+        "1000000000110000000000000001",
+        "1011111110110111111111111101",
+        "1011111110110111111111111101",
+        "1000000000000000000000000001",
+        "1011110111111111110111111101",
+        "1000000100000000000100000001",
+        "1111110110111111010111111111",
+        "1000000000001111000000000001",
+        "1011111111111111111111111101",
+        "1000000000000000000000000001",
+        "1111111111111111111111111111",
+    ]
+    mapa = [list(f) for f in mapa]
+    pacman_x, pacman_y = 1, 1
+    puntos_totales = sum(f.count("0") for f in mapa)
+    puntos = 0
+    pasos = 0
+    reloj = pygame.time.Clock()
+    inicio = time.time()
 
-# Crear carpeta de rendimiento si no existe
-ruta_performance = r"C:\Users\scozi\PycharmProjects\PacmanLab_IvanV_CristianV_ComplejidadAlgoritmos\performance"
-os.makedirs(ruta_performance, exist_ok=True)
+    def vecinos(x, y):
+        dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+        return [(x+dx, y+dy) for dx,dy in dirs
+                if 0<=x+dx<len(mapa[0]) and 0<=y+dy<len(mapa) and mapa[y+dy][x+dx] != "1"]
 
-# Crear ventana
-pantalla = pygame.display.set_mode((ANCHO, ALTO))
-pygame.display.set_caption("Pac-Man IA sin fantasmas")
+    def bfs(origen, destino):
+        cola = deque([origen]); vis = {origen: None}
+        while cola:
+            act = cola.popleft()
+            if act == destino:
+                camino = []
+                while act:
+                    camino.append(act); act = vis[act]
+                return camino[::-1]
+            for v in vecinos(*act):
+                if v not in vis:
+                    vis[v] = act; cola.append(v)
+        return None
 
-reloj = pygame.time.Clock()
+    def punto_mas_cercano(x, y):
+        cola = deque([(x,y)]); vis = {(x,y)}
+        while cola:
+            cx, cy = cola.popleft()
+            if mapa[cy][cx] == "0":
+                return (cx, cy)
+            for nx, ny in vecinos(cx, cy):
+                if (nx, ny) not in vis:
+                    vis.add((nx, ny)); cola.append((nx, ny))
+        return None
 
-# Mapa
-mapa = [
-"1111111111111111111111111111",
-"1000000000110000000000000001",
-"1011111110110111111111111101",
-"1011111110110111111111111101",
-"1000000000000000000000000001",
-"1011110111111111110111111101",
-"1000000100000000000100000001",
-"1111110110111111010111111111",
-"1000000000001111000000000001",
-"1011111111111111111111111101",
-"1000000000000000000000000001",
-"1111111111111111111111111111",
-]
+    camino = []; idx = 0
 
-mapa = [list(fila) for fila in mapa]
-FILAS, COLUMNAS = len(mapa), len(mapa[0])
+    while True:
+        reloj.tick(10)
+        for e in pygame.event.get():
+            if e.type == pygame.QUIT:
+                pygame.display.quit()
+                return
 
-# Posición inicial
-pacman_x, pacman_y = 1, 1
+        if not camino:
+            destino = punto_mas_cercano(pacman_x, pacman_y)
+            if destino:
+                camino = bfs((pacman_x, pacman_y), destino); idx = 0
+            else:
+                # No quedan puntos
+                duracion = time.time() - inicio
+                guardar_reporte("ia_sin_fantasmas", puntos, puntos_totales, pasos, duracion, "Completado", ruta_performance)
+                mostrar_resultado(pantalla, puntos, puntos_totales, pasos, duracion, vivo=True)
+                return
 
-# Contar puntos
-puntos_totales = sum(f.count('0') for f in mapa)
-puntos_recolectados = 0
-
-# --- FUNCIONES ---
-
-def dibujar_mapa():
-    for y, fila in enumerate(mapa):
-        for x, celda in enumerate(fila):
-            if celda == '1':
-                pygame.draw.rect(pantalla, AZUL, (x*TAM_CELDA, y*TAM_CELDA, TAM_CELDA, TAM_CELDA))
-            elif celda == '0':
-                pygame.draw.circle(pantalla, BLANCO, (x*TAM_CELDA+TAM_CELDA//2, y*TAM_CELDA+TAM_CELDA//2), 3)
-
-def vecinos(x, y):
-    posibles = [(x+1,y), (x-1,y), (x,y+1), (x,y-1)]
-    return [(nx,ny) for nx,ny in posibles if 0 <= nx < COLUMNAS and 0 <= ny < FILAS and mapa[ny][nx] != '1']
-
-def bfs(origen, destino):
-    cola = deque([origen])
-    visitados = {origen: None}
-    while cola:
-        actual = cola.popleft()
-        if actual == destino:
-            camino = []
-            while actual:
-                camino.append(actual)
-                actual = visitados[actual]
-            return camino[::-1]
-        for v in vecinos(*actual):
-            if v not in visitados:
-                visitados[v] = actual
-                cola.append(v)
-    return None
-
-def encontrar_punto_mas_cercano(x, y):
-    cola = deque([(x, y)])
-    visitados = {(x, y)}
-    while cola:
-        cx, cy = cola.popleft()
-        if mapa[cy][cx] == '0':
-            return (cx, cy)
-        for nx, ny in vecinos(cx, cy):
-            if (nx, ny) not in visitados:
-                visitados.add((nx, ny))
-                cola.append((nx, ny))
-    return None
-
-# --- MÉTRICAS DE RENDIMIENTO ---
-inicio_tiempo = time.time()
-pasos_totales = 0
-
-# --- BUCLE PRINCIPAL ---
-camino_actual = []
-indice_camino = 0
-ejecutando = True
-
-while ejecutando:
-    reloj.tick(FPS)
-    for evento in pygame.event.get():
-        if evento.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
-
-    if not camino_actual:
-        objetivo = encontrar_punto_mas_cercano(pacman_x, pacman_y)
-        if objetivo:
-            camino_actual = bfs((pacman_x, pacman_y), objetivo)
-            indice_camino = 0
+        if camino and idx < len(camino):
+            pacman_x, pacman_y = camino[idx]; idx += 1; pasos += 1
+            if mapa[pacman_y][pacman_x] == "0":
+                mapa[pacman_y][pacman_x] = " "; puntos += 1
         else:
-            ejecutando = False
+            camino = []
 
-    if camino_actual and indice_camino < len(camino_actual):
-        pacman_x, pacman_y = camino_actual[indice_camino]
-        indice_camino += 1
-        pasos_totales += 1  # contador de pasos
+        # --- Dibujo frame ---
+        pantalla.fill(NEGRO)
+        for y, fila in enumerate(mapa):
+            for x, c in enumerate(fila):
+                if c == "1": pygame.draw.rect(pantalla, AZUL, (x*TAM, y*TAM, TAM, TAM))
+                elif c == "0": pygame.draw.circle(pantalla, BLANCO, (x*TAM+TAM//2, y*TAM+TAM//2), 3)
+        pygame.draw.circle(pantalla, AMARILLO, (pacman_x*TAM+TAM//2, pacman_y*TAM+TAM//2), TAM//2-2)
 
-        if mapa[pacman_y][pacman_x] == '0':
-            mapa[pacman_y][pacman_x] = ' '
-            puntos_recolectados += 1
-    else:
-        camino_actual = []
-
-    pantalla.fill(NEGRO)
-    dibujar_mapa()
-    pygame.draw.circle(pantalla, AMARILLO,
-                       (pacman_x*TAM_CELDA+TAM_CELDA//2, pacman_y*TAM_CELDA+TAM_CELDA//2),
-                       TAM_CELDA//2 - 2)
-
-    fuente = pygame.font.SysFont("arial", 24)
-    texto = fuente.render(f"Puntos: {puntos_recolectados}/{puntos_totales}", True, BLANCO)
-    pantalla.blit(texto, (10, ALTO - 30))
-
-    if puntos_recolectados == puntos_totales:
-        mensaje = fuente.render("¡Pac-Man recolectó todos los puntos!", True, AMARILLO)
-        pantalla.blit(mensaje, (ANCHO//2 - 240, ALTO//2))
+        # Contador en tiempo real
+        fuente = pygame.font.SysFont("arial", 24)
+        texto = fuente.render(f"Puntos: {puntos}/{puntos_totales}", True, BLANCO)
+        pantalla.blit(texto, (10, ALTO - 30))
         pygame.display.flip()
-        pygame.time.wait(2000)
-        ejecutando = False
 
-    pygame.display.flip()
+def guardar_reporte(modo, puntos, totales, pasos, duracion, estado, ruta_base):
+    fecha_file = time.strftime("%Y-%m-%d_%H-%M-%S")
+    fecha_hum = time.strftime("%Y-%m-%d %H:%M:%S")
+    reporte = f"""REPORTE DE RENDIMIENTO - PACMAN {modo.upper()}
 
-# --- FIN DEL JUEGO: GUARDAR REPORTE ---
-fin_tiempo = time.time()
-duracion = fin_tiempo - inicio_tiempo
-
-reporte = f"""
-REPORTE DE RENDIMIENTO - PACMAN IA sin fantasmas
-
-Puntos recolectados: {puntos_recolectados}/{puntos_totales}
-Pasos totales: {pasos_totales}
+Estado: {estado}
+Puntos recolectados: {puntos}/{totales}
+Pasos totales: {pasos}
 Duración total: {duracion:.2f} segundos
-Velocidad promedio: {puntos_recolectados/duracion:.2f} puntos por segundo
-
-Fecha de ejecución: {time.strftime("%Y-%m-%d %H:%M:%S")}
+Velocidad promedio: {puntos/duracion:.2f} puntos/segundo
+Fecha de ejecución: {fecha_hum}
 """
+    ruta = os.path.join(ruta_base, f"reporte_pacman_{modo}_{fecha_file}.txt")
+    with open(ruta, "w", encoding="utf-8") as f:
+        f.write(reporte)
 
-# Guardar en carpeta performance
-fecha_ejecucion = time.strftime("%Y-%m-%d_%H-%M-%S")
-ruta_reporte = os.path.join(ruta_performance, f"reporte_pacman_ia_sin_fantasmas_{fecha_ejecucion}.txt")
-with open(ruta_reporte, "w", encoding="utf-8") as f:
-    f.write(reporte)
+def mostrar_resultado(pantalla, puntos, totales, pasos, duracion, vivo):
+    fuente = pygame.font.SysFont("arial", 24)
+    lineas = [
+        "¡IA completó el nivel! ✅" if vivo else "Pac-Man fue atrapado 😵",
+        f"Puntos recolectados: {puntos}/{totales}",
+        f"Pasos totales: {pasos}",
+        f"Duración total: {duracion:.2f} seg",
+        f"Velocidad promedio: {puntos/duracion:.2f} pts/s",
+        "Presiona ENTER para volver al menú"
+    ]
+    esperando = True
+    while esperando:
+        for e in pygame.event.get():
+            if e.type == pygame.QUIT:
+                pygame.display.quit()
+                return
+            elif e.type == pygame.KEYDOWN and e.key == pygame.K_RETURN:
+                esperando = False
+                pygame.display.quit()
+                return
 
-print(f"Reporte guardado en: {ruta_reporte}")
-print(reporte)
+        pantalla.fill((0,0,0))
+        for i, t in enumerate(lineas):
+            txt = fuente.render(t, True, (255,255,0))
+            pantalla.blit(txt, (60, 200 + i*30))
+        pygame.display.flip()
