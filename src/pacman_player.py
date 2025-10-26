@@ -38,6 +38,7 @@ def ejecutar_juego_player():
     reloj = pygame.time.Clock()
     inicio = time.time()
     fuente_contador = pygame.font.SysFont("arial", 24)
+    altura_mapa = len(mapa) * TAM
 
     def dibujar_mapa():
         for y, fila in enumerate(mapa):
@@ -78,10 +79,14 @@ def ejecutar_juego_player():
         pantalla.fill(NEGRO)
         dibujar_mapa()
         pygame.draw.circle(pantalla, AMARILLO, (pacman_x*TAM+TAM//2, pacman_y*TAM+TAM//2), TAM//2-2)
-        # Contador en tiempo real
-        texto = fuente_contador.render(f"Puntos: {puntos}/{puntos_totales}", True, BLANCO)
-        pantalla.blit(texto, (10, ALTO - 30))
-        pygame.display.set_caption(f"Pac-Man - Modo Jugador | Puntos {puntos}/{puntos_totales}")
+
+        # Contadores en tiempo real
+        duracion_actual = time.time() - inicio
+        texto_puntos = fuente_contador.render(f"Puntos: {puntos}/{puntos_totales}", True, BLANCO)
+        texto_tiempo = fuente_contador.render(f"Tiempo: {duracion_actual:.2f} s", True, BLANCO)
+        barra_y = altura_mapa + 10
+        pantalla.blit(texto_puntos, (10, barra_y))
+        pantalla.blit(texto_tiempo, (10, barra_y + 30))
         pygame.display.flip()
 
         # Victoria
