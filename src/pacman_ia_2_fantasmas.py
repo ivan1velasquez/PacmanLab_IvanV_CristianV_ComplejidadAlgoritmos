@@ -142,6 +142,12 @@ def ejecutar_juego_ia_con_fantasmas():
             mostrar_resultado(pantalla, puntos, puntos_totales, pasos, duracion, muertes, vivo=True)
             return
 
+        if (pacman_x, pacman_y) in puntos_restantes:
+            mapa[pacman_y][pacman_x] = " "
+            puntos += 1
+            puntos_restantes.discard((pacman_x, pacman_y))
+            camino = []
+
         if not camino:
             camino = a_star_penalizado((pacman_x, pacman_y), fantasmas)
 
