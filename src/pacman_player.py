@@ -3,7 +3,7 @@ import pygame, os, time
 def ejecutar_juego_player():
     pygame.init()
     pygame.font.init()
-    ANCHO, ALTO, TAM = 560, 620, 20
+    ANCHO, ALTO, TAM = 560, 400, 20
     NEGRO, AZUL, AMARILLO, BLANCO = (0,0,0),(33,33,255),(255,255,0),(255,255,255)
     pantalla = pygame.display.set_mode((ANCHO, ALTO))
     pygame.display.set_caption("Pac-Man - Modo Jugador")
@@ -137,6 +137,6 @@ def mostrar_resultado(pantalla, puntos, totales, pasos, duracion, vivo):
         pantalla.fill((0,0,0))
         for i, t in enumerate(lineas):
             txt = fuente.render(t, True, (255,255,0))
-            pantalla.blit(txt, (60, 200 + i*30))
+            pantalla.blit(txt, (60, 80 + i*30))
         pygame.display.flip()
         reloj.tick(30)

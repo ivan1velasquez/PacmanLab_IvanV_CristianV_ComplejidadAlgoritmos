@@ -4,7 +4,7 @@ from collections import deque
 def ejecutar_juego_ia_con_fantasmas():
     pygame.init()
     pygame.font.init()
-    ANCHO, ALTO, TAM = 560, 620, 20
+    ANCHO, ALTO, TAM = 560, 400, 20
     NEGRO, AZUL, AMARILLO, BLANCO, ROJO = (0,0,0),(33,33,255),(255,255,0),(255,255,255),(255,0,0)
     pantalla = pygame.display.set_mode((ANCHO, ALTO))
     pygame.display.set_caption("Pac-Man - IA con 2 fantasmas")
@@ -185,6 +185,6 @@ def mostrar_resultado(pantalla, puntos, totales, pasos, duracion, vivo):
         pantalla.fill((0,0,0))
         for i, t in enumerate(lineas):
             txt = fuente.render(t, True, (255,255,0))
-            pantalla.blit(txt, (60, 180 + i*30))
+            pantalla.blit(txt, (60, 80 + i*30))
         pygame.display.flip()
         reloj.tick(30)
