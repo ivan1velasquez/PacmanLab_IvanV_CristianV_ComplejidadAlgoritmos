@@ -1,8 +1,0 @@
-REPORTE DE RENDIMIENTO - PACMAN IA_SIN_FANTASMAS
-
-Estado: Completado
-Puntos recolectados: 140/140
-Pasos totales: 329
-Duración total: 47.25 segundos
-Velocidad promedio: 2.96 puntos/segundo
-Fecha de ejecución: 2025-10-26 00:30:05
