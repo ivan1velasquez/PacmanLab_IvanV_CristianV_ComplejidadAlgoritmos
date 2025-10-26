@@ -2,6 +2,7 @@ import pygame, os, time
 
 def ejecutar_juego_player():
     pygame.init()
+    pygame.font.init()
     ANCHO, ALTO, TAM = 560, 620, 20
     NEGRO, AZUL, AMARILLO, BLANCO = (0,0,0),(33,33,255),(255,255,0),(255,255,255)
     pantalla = pygame.display.set_mode((ANCHO, ALTO))
@@ -36,6 +37,8 @@ def ejecutar_juego_player():
     direccion = None
     reloj = pygame.time.Clock()
     inicio = time.time()
+    fuente_contador = pygame.font.SysFont("arial", 24)
+    altura_mapa = len(mapa) * TAM
 
     def dibujar_mapa():
         for y, fila in enumerate(mapa):
@@ -50,7 +53,8 @@ def ejecutar_juego_player():
         reloj.tick(12)
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
-                pygame.display.quit()
+                duracion = time.time() - inicio
+                guardar_reporte("jugador", puntos, puntos_totales, pasos, duracion, "Cancelado", ruta_performance)
                 return
             elif e.type == pygame.KEYDOWN:
                 if e.key == pygame.K_UP: direccion = "UP"
@@ -75,10 +79,14 @@ def ejecutar_juego_player():
         pantalla.fill(NEGRO)
         dibujar_mapa()
         pygame.draw.circle(pantalla, AMARILLO, (pacman_x*TAM+TAM//2, pacman_y*TAM+TAM//2), TAM//2-2)
-        # Contador en tiempo real
-        fuente = pygame.font.SysFont("arial", 24)
-        texto = fuente.render(f"Puntos: {puntos}/{puntos_totales}", True, BLANCO)
-        pantalla.blit(texto, (10, ALTO - 30))
+
+        # Contadores en tiempo real
+        duracion_actual = time.time() - inicio
+        texto_puntos = fuente_contador.render(f"Puntos: {puntos}/{puntos_totales}", True, BLANCO)
+        texto_tiempo = fuente_contador.render(f"Tiempo: {duracion_actual:.2f} s", True, BLANCO)
+        barra_y = altura_mapa + 10
+        pantalla.blit(texto_puntos, (10, barra_y))
+        pantalla.blit(texto_tiempo, (10, barra_y + 30))
         pygame.display.flip()
 
         # Victoria
@@ -91,13 +99,14 @@ def ejecutar_juego_player():
 def guardar_reporte(modo, puntos, totales, pasos, duracion, estado, ruta_base):
     fecha_file = time.strftime("%Y-%m-%d_%H-%M-%S")
     fecha_hum = time.strftime("%Y-%m-%d %H:%M:%S")
+    velocidad = puntos / duracion if duracion > 0 else 0
     reporte = f"""REPORTE DE RENDIMIENTO - PACMAN {modo.upper()}
 
 Estado: {estado}
 Puntos recolectados: {puntos}/{totales}
 Pasos totales: {pasos}
 Duración total: {duracion:.2f} segundos
-Velocidad promedio: {puntos/duracion:.2f} puntos/segundo
+Velocidad promedio: {velocidad:.2f} puntos/segundo
 Fecha de ejecución: {fecha_hum}
 """
     ruta = os.path.join(ruta_base, f"reporte_pacman_{modo}_{fecha_file}.txt")
@@ -106,23 +115,23 @@ Fecha de ejecución: {fecha_hum}
 
 def mostrar_resultado(pantalla, puntos, totales, pasos, duracion, vivo):
     fuente = pygame.font.SysFont("arial", 24)
+    reloj = pygame.time.Clock()
+    velocidad = puntos / duracion if duracion > 0 else 0
     lineas = [
         "¡Nivel completado! 🎉" if vivo else "Pac-Man fue atrapado 😵",
         f"Puntos recolectados: {puntos}/{totales}",
         f"Pasos totales: {pasos}",
         f"Duración total: {duracion:.2f} seg",
-        f"Velocidad promedio: {puntos/duracion:.2f} pts/s",
+        f"Velocidad promedio: {velocidad:.2f} pts/s",
         "Presiona ENTER para volver al menú"
     ]
     esperando = True
     while esperando:
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
-                pygame.display.quit()
                 return
-            elif e.type == pygame.KEYDOWN and e.key == pygame.K_RETURN:
+            elif e.type == pygame.KEYDOWN and e.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
                 esperando = False
-                pygame.display.quit()
                 return
 
         pantalla.fill((0,0,0))
@@ -130,3 +139,4 @@ def mostrar_resultado(pantalla, puntos, totales, pasos, duracion, vivo):
             txt = fuente.render(t, True, (255,255,0))
             pantalla.blit(txt, (60, 200 + i*30))
         pygame.display.flip()
+        reloj.tick(30)
