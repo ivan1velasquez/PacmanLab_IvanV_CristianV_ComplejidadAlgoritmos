@@ -7,8 +7,6 @@ pygame.init()
 
 # --- Ventana ---
 ANCHO, ALTO = 600, 400
-pantalla = pygame.display.set_mode((ANCHO, ALTO))
-pygame.display.set_caption("PAC-MAN LAB - MENÚ PRINCIPAL")
 
 # --- Colores ---
 NEGRO = (0, 0, 0)
@@ -16,10 +14,17 @@ AMARILLO = (255, 255, 0)
 GRIS = (150, 150, 150)
 BLANCO = (255, 255, 255)
 
-# --- Fuente ---
-fuente_titulo = pygame.font.SysFont("arial", 48, bold=True)
-fuente_opcion = pygame.font.SysFont("arial", 28)
-fuente_creditos = pygame.font.SysFont("arial", 18)
+
+def inicializar_menu():
+    """Recrea la ventana y las fuentes del menú principal."""
+    global pantalla, fuente_titulo, fuente_opcion, fuente_creditos
+
+    pantalla = pygame.display.set_mode((ANCHO, ALTO))
+    pygame.display.set_caption("PAC-MAN LAB - MENÚ PRINCIPAL")
+
+    fuente_titulo = pygame.font.SysFont("arial", 48, bold=True)
+    fuente_opcion = pygame.font.SysFont("arial", 28)
+    fuente_creditos = pygame.font.SysFont("arial", 18)
 
 # --- Rutas ---
 ruta_src = os.path.join(os.path.dirname(os.path.dirname(__file__)), "src")
@@ -39,6 +44,8 @@ ESCENARIOS = [
     ("Salir", None, None),
 ]
 
+inicializar_menu()
+
 opcion_seleccionada = 0
 
 def ejecutar_juego(nombre_archivo, nombre_funcion):
@@ -48,12 +55,13 @@ def ejecutar_juego(nombre_archivo, nombre_funcion):
 
     modulo = cargar_modulo(nombre_archivo)
     funcion = getattr(modulo, nombre_funcion)
+
+    pygame.event.clear()
     funcion()
 
     pygame.display.quit()
     pygame.display.init()
-    pygame.display.set_mode((ANCHO, ALTO))
-    pygame.display.set_caption("PAC-MAN LAB - MENÚ PRINCIPAL")
+    inicializar_menu()
 
 def main():
     global opcion_seleccionada
@@ -81,7 +89,7 @@ def main():
                     opcion_seleccionada = (opcion_seleccionada - 1) % len(ESCENARIOS)
                 elif evento.key == pygame.K_DOWN:
                     opcion_seleccionada = (opcion_seleccionada + 1) % len(ESCENARIOS)
-                elif evento.key == pygame.K_RETURN:
+                elif evento.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
                     _, archivo, funcion = ESCENARIOS[opcion_seleccionada]
                     ejecutar_juego(archivo, funcion)
 
