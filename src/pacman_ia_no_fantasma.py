@@ -8,6 +8,31 @@ RUTA_IMAGENES = os.path.join(RUTA_BASE, "images")
 PACMAN_VELOCIDAD_ANIM = 5  # Fotogramas de animación por segundo
 
 
+def crear_animador(frames, velocidad_fps):
+    return {
+        "frames": frames,
+        "velocidad": velocidad_fps,
+        "indice": 0,
+        "tiempo": 0.0,
+    }
+
+
+def avanzar_animacion(animador, dt_ms):
+    frames = animador["frames"]
+    if not frames:
+        return pygame.Surface((0, 0), pygame.SRCALPHA)
+
+    velocidad = animador["velocidad"]
+    if velocidad > 0:
+        intervalo = 1000 / velocidad
+        animador["tiempo"] += dt_ms
+        while animador["tiempo"] >= intervalo:
+            animador["tiempo"] -= intervalo
+            animador["indice"] = (animador["indice"] + 1) % len(frames)
+
+    return frames[animador["indice"]]
+
+
 def cargar_animacion(nombre_archivo, tam, frames=8):
     sheet = pygame.image.load(os.path.join(RUTA_IMAGENES, nombre_archivo)).convert_alpha()
     ancho_frame = sheet.get_width() // frames
@@ -58,8 +83,7 @@ def ejecutar_juego_ia_sin_fantasmas():
     ]
     mapa = [list(f) for f in mapa]
     pacman_frames = cargar_animacion("Pacman.png", TAM)
-    pacman_frame_idx = 0
-    pacman_anim_tiempo = 0.0
+    animacion_pacman = crear_animador(pacman_frames, PACMAN_VELOCIDAD_ANIM)
     pacman_dir = "R"
 
     pacman_x, pacman_y = 1, 1
@@ -144,13 +168,8 @@ def ejecutar_juego_ia_sin_fantasmas():
             for x, c in enumerate(fila):
                 if c == "1": pygame.draw.rect(pantalla, AZUL, (x*TAM, y*TAM, TAM, TAM))
                 elif c == "0": pygame.draw.circle(pantalla, BLANCO, (x*TAM+TAM//2, y*TAM+TAM//2), 3)
-        intervalo_pacman = 1000 / PACMAN_VELOCIDAD_ANIM if PACMAN_VELOCIDAD_ANIM > 0 else 1000
-        pacman_anim_tiempo += dt
-        while pacman_anim_tiempo >= intervalo_pacman:
-            pacman_anim_tiempo -= intervalo_pacman
-            pacman_frame_idx = (pacman_frame_idx + 1) % len(pacman_frames)
-
-        frame_actual = orientar_frame(pacman_frames[pacman_frame_idx], pacman_dir)
+        frame_base = avanzar_animacion(animacion_pacman, dt)
+        frame_actual = orientar_frame(frame_base, pacman_dir)
         rect_pacman = frame_actual.get_rect(center=(pacman_x*TAM+TAM//2, pacman_y*TAM+TAM//2))
         pantalla.blit(frame_actual, rect_pacman)
 

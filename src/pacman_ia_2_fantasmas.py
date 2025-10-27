@@ -9,6 +9,31 @@ PACMAN_VELOCIDAD_ANIM = 5  # Fotogramas de animación por segundo
 FANTASMA_VELOCIDAD_ANIM = 7  # Fotogramas de animación por segundo
 
 
+def crear_animador(frames, velocidad_fps):
+    return {
+        "frames": frames,
+        "velocidad": velocidad_fps,
+        "indice": 0,
+        "tiempo": 0.0,
+    }
+
+
+def avanzar_animacion(animador, dt_ms):
+    frames = animador["frames"]
+    if not frames:
+        return pygame.Surface((0, 0), pygame.SRCALPHA)
+
+    velocidad = animador["velocidad"]
+    if velocidad > 0:
+        intervalo = 1000 / velocidad
+        animador["tiempo"] += dt_ms
+        while animador["tiempo"] >= intervalo:
+            animador["tiempo"] -= intervalo
+            animador["indice"] = (animador["indice"] + 1) % len(frames)
+
+    return frames[animador["indice"]]
+
+
 def cargar_animacion(nombre_archivo, tam, frames=8):
     sheet = pygame.image.load(os.path.join(RUTA_IMAGENES, nombre_archivo)).convert_alpha()
     ancho_frame = sheet.get_width() // frames
@@ -60,13 +85,11 @@ def ejecutar_juego_ia_con_fantasmas():
     mapa = [list(f) for f in mapa]
 
     pacman_frames = cargar_animacion("Pacman.png", TAM)
-    pacman_frame_idx = 0
-    pacman_anim_tiempo = 0.0
+    animacion_pacman = crear_animador(pacman_frames, PACMAN_VELOCIDAD_ANIM)
     pacman_dir = "R"
 
     fantasma_frames = cargar_animacion("redGhost.png", TAM)
-    fantasma_frame_idx = 0
-    fantasma_anim_tiempo = 0.0
+    animacion_fantasma = crear_animador(fantasma_frames, FANTASMA_VELOCIDAD_ANIM)
 
     pacman_x, pacman_y = 1, 1
     spawn_inicial = (pacman_x, pacman_y)
@@ -256,21 +279,12 @@ def ejecutar_juego_ia_con_fantasmas():
                     pygame.draw.rect(pantalla, AZUL, (x*TAM, y*TAM, TAM, TAM))
                 elif c == "0":
                     pygame.draw.circle(pantalla, BLANCO, (x*TAM+TAM//2, y*TAM+TAM//2), 3)
-        intervalo_pacman = 1000 / PACMAN_VELOCIDAD_ANIM if PACMAN_VELOCIDAD_ANIM > 0 else 1000
-        pacman_anim_tiempo += dt
-        while pacman_anim_tiempo >= intervalo_pacman:
-            pacman_anim_tiempo -= intervalo_pacman
-            pacman_frame_idx = (pacman_frame_idx + 1) % len(pacman_frames)
-        frame_pacman = orientar_frame(pacman_frames[pacman_frame_idx], pacman_dir)
+        frame_base_pacman = avanzar_animacion(animacion_pacman, dt)
+        frame_pacman = orientar_frame(frame_base_pacman, pacman_dir)
         rect_pacman = frame_pacman.get_rect(center=(pacman_x*TAM+TAM//2, pacman_y*TAM+TAM//2))
         pantalla.blit(frame_pacman, rect_pacman)
 
-        intervalo_fantasma = 1000 / FANTASMA_VELOCIDAD_ANIM if FANTASMA_VELOCIDAD_ANIM > 0 else 1000
-        fantasma_anim_tiempo += dt
-        while fantasma_anim_tiempo >= intervalo_fantasma:
-            fantasma_anim_tiempo -= intervalo_fantasma
-            fantasma_frame_idx = (fantasma_frame_idx + 1) % len(fantasma_frames)
-        frame_fantasma_base = fantasma_frames[fantasma_frame_idx]
+        frame_fantasma_base = avanzar_animacion(animacion_fantasma, dt)
         for (gx, gy), dir_fantasma in zip(fantasmas, fantasmas_dir):
             frame_fantasma = orientar_frame(frame_fantasma_base, dir_fantasma)
             rect_fantasma = frame_fantasma.get_rect(center=(gx*TAM+TAM//2, gy*TAM+TAM//2))
