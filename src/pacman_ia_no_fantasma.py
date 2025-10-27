@@ -132,7 +132,7 @@ def ejecutar_juego_ia_sin_fantasmas(mapa_layout=None):
                     vis.add((nx, ny)); cola.append((nx, ny))
         return None
 
-    camino = []; idx = 0
+    camino = []
 
     while True:
         dt = reloj.tick(10)
@@ -145,7 +145,7 @@ def ejecutar_juego_ia_sin_fantasmas(mapa_layout=None):
         if not camino:
             destino = punto_mas_cercano(pacman_x, pacman_y)
             if destino:
-                camino = bfs((pacman_x, pacman_y), destino); idx = 0
+                camino = bfs((pacman_x, pacman_y), destino) or []
             else:
                 # No quedan puntos
                 duracion = time.time() - inicio
@@ -153,8 +153,8 @@ def ejecutar_juego_ia_sin_fantasmas(mapa_layout=None):
                 mostrar_resultado(pantalla, puntos, puntos_totales, pasos, duracion, vivo=True)
                 return
 
-        if camino and idx < len(camino):
-            nx, ny = camino[idx]
+        if camino:
+            nx, ny = camino.pop(0)
             if nx > pacman_x:
                 pacman_dir = "R"
             elif nx < pacman_x:
@@ -163,7 +163,7 @@ def ejecutar_juego_ia_sin_fantasmas(mapa_layout=None):
                 pacman_dir = "D"
             elif ny < pacman_y:
                 pacman_dir = "U"
-            pacman_x, pacman_y = nx, ny; idx += 1; pasos += 1
+            pacman_x, pacman_y = nx, ny; pasos += 1
             if mapa[pacman_y][pacman_x] == "0":
                 mapa[pacman_y][pacman_x] = " "; puntos += 1
         else:
