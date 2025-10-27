@@ -1,6 +1,32 @@
 import pygame, time, random, os, heapq
 from collections import deque
 
+
+RUTA_BASE = os.path.dirname(os.path.dirname(__file__))
+RUTA_IMAGENES = os.path.join(RUTA_BASE, "images")
+
+
+def cargar_animacion(nombre_archivo, tam, frames=8):
+    sheet = pygame.image.load(os.path.join(RUTA_IMAGENES, nombre_archivo)).convert_alpha()
+    ancho_frame = sheet.get_width() // frames
+    alto_frame = sheet.get_height()
+    animacion = []
+    for i in range(frames):
+        frame = pygame.Surface((ancho_frame, alto_frame), pygame.SRCALPHA)
+        frame.blit(sheet, (0, 0), (i * ancho_frame, 0, ancho_frame, alto_frame))
+        animacion.append(pygame.transform.scale(frame, (tam, tam)))
+    return animacion
+
+
+def orientar_frame(frame, direccion):
+    if direccion == "L":
+        return pygame.transform.flip(frame, True, False)
+    if direccion == "U":
+        return pygame.transform.rotate(frame, 90)
+    if direccion == "D":
+        return pygame.transform.rotate(frame, -90)
+    return frame
+
 def ejecutar_juego_ia_con_fantasmas():
     pygame.init()
     pygame.font.init()
@@ -29,6 +55,17 @@ def ejecutar_juego_ia_con_fantasmas():
         "1111111111111111111111111111",
     ]
     mapa = [list(f) for f in mapa]
+
+    pacman_frames = cargar_animacion("Pacman.png", TAM)
+    pacman_frame_idx = 0
+    pacman_anim_contador = 0
+    PACMAN_VELOCIDAD_ANIM = 5
+    pacman_dir = "R"
+
+    fantasma_frames = cargar_animacion("redGhost.png", TAM)
+    fantasma_frame_idx = 0
+    fantasma_anim_contador = 0
+    FANTASMA_VELOCIDAD_ANIM = 7
 
     pacman_x, pacman_y = 1, 1
     spawn_inicial = (pacman_x, pacman_y)
@@ -124,6 +161,7 @@ def ejecutar_juego_ia_con_fantasmas():
                 return (x, y)
 
     fantasmas = [celda_libre(), celda_libre()]
+    fantasmas_dir = ["R" for _ in fantasmas]
 
     camino = []
     vivo = True
@@ -152,7 +190,16 @@ def ejecutar_juego_ia_con_fantasmas():
             camino = a_star_penalizado((pacman_x, pacman_y), fantasmas)
 
         if camino:
-            pacman_x, pacman_y = camino.pop(0)
+            nx, ny = camino.pop(0)
+            if nx > pacman_x:
+                pacman_dir = "R"
+            elif nx < pacman_x:
+                pacman_dir = "L"
+            elif ny > pacman_y:
+                pacman_dir = "D"
+            elif ny < pacman_y:
+                pacman_dir = "U"
+            pacman_x, pacman_y = nx, ny
             pasos += 1
             if mapa[pacman_y][pacman_x] == "0":
                 mapa[pacman_y][pacman_x] = " "
@@ -165,8 +212,18 @@ def ejecutar_juego_ia_con_fantasmas():
         # --- Movimiento de fantasmas: persecución BFS ---
         for i, (gx, gy) in enumerate(fantasmas):
             c = bfs((gx, gy), (pacman_x, pacman_y))
+            nx, ny = gx, gy
             if c and len(c) > 1:
-                fantasmas[i] = c[1]
+                nx, ny = c[1]
+            if nx > gx:
+                fantasmas_dir[i] = "R"
+            elif nx < gx:
+                fantasmas_dir[i] = "L"
+            elif ny > gy:
+                fantasmas_dir[i] = "D"
+            elif ny < gy:
+                fantasmas_dir[i] = "U"
+            fantasmas[i] = (nx, ny)
 
         # Colisión con fantasmas
         atrapado = False
@@ -180,10 +237,12 @@ def ejecutar_juego_ia_con_fantasmas():
             muertes += 1
             factor_miedo = 1.0 + muertes * 0.5
             pacman_x, pacman_y = spawn_inicial
+            pacman_dir = "R"
             camino = []
             for i, (gx, gy) in enumerate(fantasmas):
                 if (gx, gy) == (pacman_x, pacman_y):
                     fantasmas[i] = celda_libre()
+                    fantasmas_dir[i] = "R"
             continue
         else:
             vivo = True
@@ -196,9 +255,21 @@ def ejecutar_juego_ia_con_fantasmas():
                     pygame.draw.rect(pantalla, AZUL, (x*TAM, y*TAM, TAM, TAM))
                 elif c == "0":
                     pygame.draw.circle(pantalla, BLANCO, (x*TAM+TAM//2, y*TAM+TAM//2), 3)
-        pygame.draw.circle(pantalla, AMARILLO, (pacman_x*TAM+TAM//2, pacman_y*TAM+TAM//2), TAM//2-2)
-        for gx, gy in fantasmas:
-            pygame.draw.circle(pantalla, ROJO, (gx*TAM+TAM//2, gy*TAM+TAM//2), TAM//2-2)
+        pacman_anim_contador = (pacman_anim_contador + 1) % (PACMAN_VELOCIDAD_ANIM * len(pacman_frames))
+        if pacman_anim_contador % PACMAN_VELOCIDAD_ANIM == 0:
+            pacman_frame_idx = (pacman_frame_idx + 1) % len(pacman_frames)
+        frame_pacman = orientar_frame(pacman_frames[pacman_frame_idx], pacman_dir)
+        rect_pacman = frame_pacman.get_rect(center=(pacman_x*TAM+TAM//2, pacman_y*TAM+TAM//2))
+        pantalla.blit(frame_pacman, rect_pacman)
+
+        fantasma_anim_contador = (fantasma_anim_contador + 1) % (FANTASMA_VELOCIDAD_ANIM * len(fantasma_frames))
+        if fantasma_anim_contador % FANTASMA_VELOCIDAD_ANIM == 0:
+            fantasma_frame_idx = (fantasma_frame_idx + 1) % len(fantasma_frames)
+        frame_fantasma_base = fantasma_frames[fantasma_frame_idx]
+        for (gx, gy), dir_fantasma in zip(fantasmas, fantasmas_dir):
+            frame_fantasma = orientar_frame(frame_fantasma_base, dir_fantasma)
+            rect_fantasma = frame_fantasma.get_rect(center=(gx*TAM+TAM//2, gy*TAM+TAM//2))
+            pantalla.blit(frame_fantasma, rect_fantasma)
 
         # Contadores en tiempo real
         duracion_actual = time.time() - inicio
