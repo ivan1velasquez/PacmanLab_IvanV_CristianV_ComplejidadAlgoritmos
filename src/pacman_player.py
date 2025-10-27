@@ -4,6 +4,8 @@ import pygame, os, time
 RUTA_BASE = os.path.dirname(os.path.dirname(__file__))
 RUTA_IMAGENES = os.path.join(RUTA_BASE, "images")
 
+PACMAN_VELOCIDAD_ANIM = 5
+
 
 def cargar_animacion(nombre_archivo, tam, frames=8):
     sheet = pygame.image.load(os.path.join(RUTA_IMAGENES, nombre_archivo)).convert_alpha()
