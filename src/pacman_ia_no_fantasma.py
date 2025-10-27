@@ -1,11 +1,85 @@
 import pygame, os, time
 from collections import deque
 
-def ejecutar_juego_ia_sin_fantasmas():
+
+RUTA_BASE = os.path.dirname(os.path.dirname(__file__))
+RUTA_IMAGENES = os.path.join(RUTA_BASE, "images")
+
+PACMAN_VELOCIDAD_ANIM = 5  # Fotogramas de animación por segundo
+
+MAPA_DEFAULT = (
+    "1111111111111111111111111111",
+    "1000000000110000000000000001",
+    "1011111110110111111111111101",
+    "1011111110110111111111111101",
+    "1000000000000000000000000001",
+    "1011110111111111110111111101",
+    "1000000100000000000100000001",
+    "1111110110111111010111111111",
+    "1000000000001111000000000001",
+    "1011111111111111111111111101",
+    "1000000000000000000000000001",
+    "1111111111111111111111111111",
+)
+
+
+def crear_animador(frames, velocidad_fps):
+    return {
+        "frames": frames,
+        "velocidad": velocidad_fps,
+        "indice": 0,
+        "tiempo": 0.0,
+    }
+
+
+def avanzar_animacion(animador, dt_ms):
+    frames = animador["frames"]
+    if not frames:
+        return pygame.Surface((0, 0), pygame.SRCALPHA)
+
+    velocidad = animador["velocidad"]
+    if velocidad > 0:
+        intervalo = 1000 / velocidad
+        animador["tiempo"] += dt_ms
+        while animador["tiempo"] >= intervalo:
+            animador["tiempo"] -= intervalo
+            animador["indice"] = (animador["indice"] + 1) % len(frames)
+
+    return frames[animador["indice"]]
+
+
+def cargar_animacion(nombre_archivo, tam, frames=8):
+    sheet = pygame.image.load(os.path.join(RUTA_IMAGENES, nombre_archivo)).convert_alpha()
+    ancho_frame = sheet.get_width() // frames
+    alto_frame = sheet.get_height()
+    animacion = []
+    for i in range(frames):
+        frame = pygame.Surface((ancho_frame, alto_frame), pygame.SRCALPHA)
+        frame.blit(sheet, (0, 0), (i * ancho_frame, 0, ancho_frame, alto_frame))
+        animacion.append(pygame.transform.scale(frame, (tam, tam)))
+    return animacion
+
+
+def orientar_frame(frame, direccion):
+    if direccion == "L":
+        return pygame.transform.flip(frame, True, False)
+    if direccion == "U":
+        return pygame.transform.rotate(frame, 90)
+    if direccion == "D":
+        return pygame.transform.rotate(frame, -90)
+    return frame
+
+def ejecutar_juego_ia_sin_fantasmas(mapa_layout=None):
     pygame.init()
     pygame.font.init()
-    ANCHO, ALTO, TAM = 560, 400, 20
+    TAM = 20
     NEGRO, AZUL, AMARILLO, BLANCO = (0,0,0),(33,33,255),(255,255,0),(255,255,255)
+    layout_base = mapa_layout if mapa_layout is not None else MAPA_DEFAULT
+    ancho_mapa_px = len(layout_base[0]) * TAM
+    alto_mapa_px = len(layout_base) * TAM
+    ESPACIO_INFO = 80
+    ANCHO = max(ancho_mapa_px, 400)
+    ALTO = alto_mapa_px + ESPACIO_INFO
     pantalla = pygame.display.set_mode((ANCHO, ALTO))
     pygame.display.set_caption("Pac-Man - IA sin fantasmas")
 
@@ -14,21 +88,11 @@ def ejecutar_juego_ia_sin_fantasmas():
     ruta_performance = os.path.join(ruta_base, "results", "performance")
     os.makedirs(ruta_performance, exist_ok=True)
 
-    mapa = [
-        "1111111111111111111111111111",
-        "1000000000110000000000000001",
-        "1011111110110111111111111101",
-        "1011111110110111111111111101",
-        "1000000000000000000000000001",
-        "1011110111111111110111111101",
-        "1000000100000000000100000001",
-        "1111110110111111010111111111",
-        "1000000000001111000000000001",
-        "1011111111111111111111111101",
-        "1000000000000000000000000001",
-        "1111111111111111111111111111",
-    ]
-    mapa = [list(f) for f in mapa]
+    mapa = [list(f) for f in layout_base]
+    pacman_frames = cargar_animacion("Pacman.png", TAM)
+    animacion_pacman = crear_animador(pacman_frames, PACMAN_VELOCIDAD_ANIM)
+    pacman_dir = "R"
+
     pacman_x, pacman_y = 1, 1
     puntos_totales = sum(f.count("0") for f in mapa)
     puntos = 0
@@ -36,7 +100,7 @@ def ejecutar_juego_ia_sin_fantasmas():
     reloj = pygame.time.Clock()
     inicio = time.time()
     fuente_contador = pygame.font.SysFont("arial", 24)
-    altura_mapa = len(mapa) * TAM
+    altura_mapa = alto_mapa_px
 
     def vecinos(x, y):
         dirs = [(1,0),(-1,0),(0,1),(0,-1)]
@@ -71,7 +135,7 @@ def ejecutar_juego_ia_sin_fantasmas():
     camino = []; idx = 0
 
     while True:
-        reloj.tick(10)
+        dt = reloj.tick(10)
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 duracion = time.time() - inicio
@@ -90,7 +154,16 @@ def ejecutar_juego_ia_sin_fantasmas():
                 return
 
         if camino and idx < len(camino):
-            pacman_x, pacman_y = camino[idx]; idx += 1; pasos += 1
+            nx, ny = camino[idx]
+            if nx > pacman_x:
+                pacman_dir = "R"
+            elif nx < pacman_x:
+                pacman_dir = "L"
+            elif ny > pacman_y:
+                pacman_dir = "D"
+            elif ny < pacman_y:
+                pacman_dir = "U"
+            pacman_x, pacman_y = nx, ny; idx += 1; pasos += 1
             if mapa[pacman_y][pacman_x] == "0":
                 mapa[pacman_y][pacman_x] = " "; puntos += 1
         else:
@@ -102,7 +175,10 @@ def ejecutar_juego_ia_sin_fantasmas():
             for x, c in enumerate(fila):
                 if c == "1": pygame.draw.rect(pantalla, AZUL, (x*TAM, y*TAM, TAM, TAM))
                 elif c == "0": pygame.draw.circle(pantalla, BLANCO, (x*TAM+TAM//2, y*TAM+TAM//2), 3)
-        pygame.draw.circle(pantalla, AMARILLO, (pacman_x*TAM+TAM//2, pacman_y*TAM+TAM//2), TAM//2-2)
+        frame_base = avanzar_animacion(animacion_pacman, dt)
+        frame_actual = orientar_frame(frame_base, pacman_dir)
+        rect_pacman = frame_actual.get_rect(center=(pacman_x*TAM+TAM//2, pacman_y*TAM+TAM//2))
+        pantalla.blit(frame_actual, rect_pacman)
 
         # Contadores en tiempo real
         duracion_actual = time.time() - inicio
