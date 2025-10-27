@@ -94,6 +94,10 @@ def ejecutar_juego_player(mapa_layout=None):
     animacion_pacman = crear_animador(pacman_frames, PACMAN_VELOCIDAD_ANIM)
     pacman_dir = "R"
 
+    pacman_frames = cargar_animacion("Pacman.png", TAM)
+    animacion_pacman = crear_animador(pacman_frames, PACMAN_VELOCIDAD_ANIM)
+    pacman_dir = "R"
+
     pacman_x, pacman_y = 1, 1
     puntos_totales = sum(f.count("0") for f in mapa)
     puntos = 0

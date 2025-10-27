@@ -98,6 +98,13 @@ def ejecutar_juego_ia_con_fantasmas(mapa_layout=None):
     fantasma_frames = cargar_animacion("redGhost.png", TAM)
     animacion_fantasma = crear_animador(fantasma_frames, FANTASMA_VELOCIDAD_ANIM)
 
+    pacman_frames = cargar_animacion("Pacman.png", TAM)
+    animacion_pacman = crear_animador(pacman_frames, PACMAN_VELOCIDAD_ANIM)
+    pacman_dir = "R"
+
+    fantasma_frames = cargar_animacion("redGhost.png", TAM)
+    animacion_fantasma = crear_animador(fantasma_frames, FANTASMA_VELOCIDAD_ANIM)
+
     pacman_x, pacman_y = 1, 1
     spawn_inicial = (pacman_x, pacman_y)
     puntos_restantes = {(x, y) for y, fila in enumerate(mapa) for x, celda in enumerate(fila) if celda == "0"}
