@@ -5,6 +5,9 @@ from collections import deque
 RUTA_BASE = os.path.dirname(os.path.dirname(__file__))
 RUTA_IMAGENES = os.path.join(RUTA_BASE, "images")
 
+PACMAN_VELOCIDAD_ANIM = 5
+FANTASMA_VELOCIDAD_ANIM = 7
+
 
 def cargar_animacion(nombre_archivo, tam, frames=8):
     sheet = pygame.image.load(os.path.join(RUTA_IMAGENES, nombre_archivo)).convert_alpha()
@@ -59,13 +62,11 @@ def ejecutar_juego_ia_con_fantasmas():
     pacman_frames = cargar_animacion("Pacman.png", TAM)
     pacman_frame_idx = 0
     pacman_anim_contador = 0
-    PACMAN_VELOCIDAD_ANIM = 5
     pacman_dir = "R"
 
     fantasma_frames = cargar_animacion("redGhost.png", TAM)
     fantasma_frame_idx = 0
     fantasma_anim_contador = 0
-    FANTASMA_VELOCIDAD_ANIM = 7
 
     pacman_x, pacman_y = 1, 1
     spawn_inicial = (pacman_x, pacman_y)

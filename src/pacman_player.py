@@ -4,6 +4,8 @@ import pygame, os, time
 RUTA_BASE = os.path.dirname(os.path.dirname(__file__))
 RUTA_IMAGENES = os.path.join(RUTA_BASE, "images")
 
+PACMAN_VELOCIDAD_ANIM = 5
+
 
 def cargar_animacion(nombre_archivo, tam, frames=8):
     sheet = pygame.image.load(os.path.join(RUTA_IMAGENES, nombre_archivo)).convert_alpha()
@@ -59,7 +61,6 @@ def ejecutar_juego_player():
     pacman_frames = cargar_animacion("Pacman.png", TAM)
     pacman_frame_idx = 0
     pacman_anim_contador = 0
-    PACMAN_VELOCIDAD_ANIM = 5
     pacman_dir = "R"
 
     pacman_x, pacman_y = 1, 1
