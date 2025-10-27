@@ -8,6 +8,21 @@ RUTA_IMAGENES = os.path.join(RUTA_BASE, "images")
 PACMAN_VELOCIDAD_ANIM = 5  # Fotogramas de animación por segundo
 FANTASMA_VELOCIDAD_ANIM = 7  # Fotogramas de animación por segundo
 
+MAPA_DEFAULT = (
+    "1111111111111111111111111111",
+    "1000000000110000000000000001",
+    "1011111110110111111111111101",
+    "1011111110110111111111111101",
+    "1000000000000000000000000001",
+    "1011110111111111110111111101",
+    "1000000100000000000100000001",
+    "1111110110111111010111111111",
+    "1000000000001111000000000001",
+    "1011111111111111111111111101",
+    "1000000000000000000000000001",
+    "1111111111111111111111111111",
+)
+
 
 def crear_animador(frames, velocidad_fps):
     return {
@@ -55,11 +70,17 @@ def orientar_frame(frame, direccion):
         return pygame.transform.rotate(frame, -90)
     return frame
 
-def ejecutar_juego_ia_con_fantasmas():
+def ejecutar_juego_ia_con_fantasmas(mapa_layout=None):
     pygame.init()
     pygame.font.init()
-    ANCHO, ALTO, TAM = 560, 400, 20
+    TAM = 20
     NEGRO, AZUL, AMARILLO, BLANCO, ROJO = (0,0,0),(33,33,255),(255,255,0),(255,255,255),(255,0,0)
+    layout_base = mapa_layout if mapa_layout is not None else MAPA_DEFAULT
+    ancho_mapa_px = len(layout_base[0]) * TAM
+    alto_mapa_px = len(layout_base) * TAM
+    ESPACIO_INFO = 80
+    ANCHO = max(ancho_mapa_px, 400)
+    ALTO = alto_mapa_px + ESPACIO_INFO
     pantalla = pygame.display.set_mode((ANCHO, ALTO))
     pygame.display.set_caption("Pac-Man - IA con 2 fantasmas")
 
@@ -68,21 +89,14 @@ def ejecutar_juego_ia_con_fantasmas():
     ruta_performance = os.path.join(ruta_base, "results", "performance")
     os.makedirs(ruta_performance, exist_ok=True)
 
-    mapa = [
-        "1111111111111111111111111111",
-        "1000000000110000000000000001",
-        "1011111110110111111111111101",
-        "1011111110110111111111111101",
-        "1000000000000000000000000001",
-        "1011110111111111110111111101",
-        "1000000100000000000100000001",
-        "1111110110111111010111111111",
-        "1000000000001111000000000001",
-        "1011111111111111111111111101",
-        "1000000000000000000000000001",
-        "1111111111111111111111111111",
-    ]
-    mapa = [list(f) for f in mapa]
+    mapa = [list(f) for f in layout_base]
+
+    pacman_frames = cargar_animacion("Pacman.png", TAM)
+    animacion_pacman = crear_animador(pacman_frames, PACMAN_VELOCIDAD_ANIM)
+    pacman_dir = "R"
+
+    fantasma_frames = cargar_animacion("redGhost.png", TAM)
+    animacion_fantasma = crear_animador(fantasma_frames, FANTASMA_VELOCIDAD_ANIM)
 
     pacman_frames = cargar_animacion("Pacman.png", TAM)
     animacion_pacman = crear_animador(pacman_frames, PACMAN_VELOCIDAD_ANIM)
@@ -102,7 +116,7 @@ def ejecutar_juego_ia_con_fantasmas():
     reloj = pygame.time.Clock()
     inicio = time.time()
     fuente_contador = pygame.font.SysFont("arial", 24)
-    altura_mapa = len(mapa) * TAM
+    altura_mapa = alto_mapa_px
 
     def vecinos(x, y):
         dirs = [(1,0),(-1,0),(0,1),(0,-1)]
