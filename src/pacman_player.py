@@ -4,7 +4,7 @@ import pygame, os, time
 RUTA_BASE = os.path.dirname(os.path.dirname(__file__))
 RUTA_IMAGENES = os.path.join(RUTA_BASE, "images")
 
-PACMAN_VELOCIDAD_ANIM = 5
+PACMAN_VELOCIDAD_ANIM = 5  # Fotogramas de animación por segundo
 
 
 def cargar_animacion(nombre_archivo, tam, frames=8):
@@ -60,7 +60,7 @@ def ejecutar_juego_player():
 
     pacman_frames = cargar_animacion("Pacman.png", TAM)
     pacman_frame_idx = 0
-    pacman_anim_contador = 0
+    pacman_anim_tiempo = 0.0
     pacman_dir = "R"
 
     pacman_x, pacman_y = 1, 1
@@ -83,7 +83,7 @@ def ejecutar_juego_player():
 
     # --- Juego principal ---
     while True:
-        reloj.tick(12)
+        dt = reloj.tick(12)
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 duracion = time.time() - inicio
@@ -119,8 +119,10 @@ def ejecutar_juego_player():
         # --- Dibujo frame ---
         pantalla.fill(NEGRO)
         dibujar_mapa()
-        pacman_anim_contador = (pacman_anim_contador + 1) % (PACMAN_VELOCIDAD_ANIM * len(pacman_frames))
-        if pacman_anim_contador % PACMAN_VELOCIDAD_ANIM == 0:
+        intervalo_pacman = 1000 / PACMAN_VELOCIDAD_ANIM if PACMAN_VELOCIDAD_ANIM > 0 else 1000
+        pacman_anim_tiempo += dt
+        while pacman_anim_tiempo >= intervalo_pacman:
+            pacman_anim_tiempo -= intervalo_pacman
             pacman_frame_idx = (pacman_frame_idx + 1) % len(pacman_frames)
 
         frame_actual = orientar_frame(pacman_frames[pacman_frame_idx], pacman_dir)
