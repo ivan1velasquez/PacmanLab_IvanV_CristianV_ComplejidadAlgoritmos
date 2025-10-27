@@ -5,7 +5,7 @@ from collections import deque
 RUTA_BASE = os.path.dirname(os.path.dirname(__file__))
 RUTA_IMAGENES = os.path.join(RUTA_BASE, "images")
 
-PACMAN_VELOCIDAD_ANIM = 5
+PACMAN_VELOCIDAD_ANIM = 5  # Fotogramas de animación por segundo
 
 
 def cargar_animacion(nombre_archivo, tam, frames=8):
@@ -59,7 +59,7 @@ def ejecutar_juego_ia_sin_fantasmas():
     mapa = [list(f) for f in mapa]
     pacman_frames = cargar_animacion("Pacman.png", TAM)
     pacman_frame_idx = 0
-    pacman_anim_contador = 0
+    pacman_anim_tiempo = 0.0
     pacman_dir = "R"
 
     pacman_x, pacman_y = 1, 1
@@ -104,7 +104,7 @@ def ejecutar_juego_ia_sin_fantasmas():
     camino = []; idx = 0
 
     while True:
-        reloj.tick(10)
+        dt = reloj.tick(10)
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 duracion = time.time() - inicio
@@ -144,8 +144,10 @@ def ejecutar_juego_ia_sin_fantasmas():
             for x, c in enumerate(fila):
                 if c == "1": pygame.draw.rect(pantalla, AZUL, (x*TAM, y*TAM, TAM, TAM))
                 elif c == "0": pygame.draw.circle(pantalla, BLANCO, (x*TAM+TAM//2, y*TAM+TAM//2), 3)
-        pacman_anim_contador = (pacman_anim_contador + 1) % (PACMAN_VELOCIDAD_ANIM * len(pacman_frames))
-        if pacman_anim_contador % PACMAN_VELOCIDAD_ANIM == 0:
+        intervalo_pacman = 1000 / PACMAN_VELOCIDAD_ANIM if PACMAN_VELOCIDAD_ANIM > 0 else 1000
+        pacman_anim_tiempo += dt
+        while pacman_anim_tiempo >= intervalo_pacman:
+            pacman_anim_tiempo -= intervalo_pacman
             pacman_frame_idx = (pacman_frame_idx + 1) % len(pacman_frames)
 
         frame_actual = orientar_frame(pacman_frames[pacman_frame_idx], pacman_dir)
