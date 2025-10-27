@@ -1,9 +1,0 @@
-REPORTE DE RENDIMIENTO - PACMAN IA_2FANTASMAS
-
-Estado: Completado
-Puntos recolectados: 280/280
-Pasos totales: 455
-Duración total: 45.90 segundos
-Velocidad promedio: 6.10 puntos/segundo
-Muertes totales: 2
-Fecha de ejecución: 2025-10-27 01:19:46

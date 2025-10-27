@@ -1,8 +1,0 @@
-REPORTE DE RENDIMIENTO - PACMAN JUGADOR
-
-Estado: Cancelado
-Puntos recolectados: 65/133
-Pasos totales: 83
-Duración total: 9.38 segundos
-Velocidad promedio: 6.93 puntos/segundo
-Fecha de ejecución: 2025-10-27 01:18:19
