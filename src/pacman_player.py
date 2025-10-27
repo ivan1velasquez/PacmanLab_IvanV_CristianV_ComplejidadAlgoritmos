@@ -59,7 +59,7 @@ def ejecutar_juego_player():
     pacman_frames = cargar_animacion("Pacman.png", TAM)
     pacman_frame_idx = 0
     pacman_anim_contador = 0
-    PACMAN_VELOCIDAD_ANIM = 5
+    PACMAN_VELOCIDAD_ANIM = 18
     pacman_dir = "R"
 
     pacman_x, pacman_y = 1, 1
