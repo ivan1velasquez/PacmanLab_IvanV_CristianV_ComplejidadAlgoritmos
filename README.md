@@ -1,7 +1,7 @@
 "PAC BOT" LAB COMPLEJIDAD DE ALGORITMOS (10-2025)
 por Iván Velásquez y Cristián Vega 
 ---------------------------------------
-Para ejecutar el programa completo solo basta con ejecutar el archivo main.py ubicado en el directorio "gui", ádemas de contar con 
+Para ejecutar primero debe descomprimir el archivo .zip del programa completo, luego abrir el archi en Pycharm y luego solo basta con ejecutar el archivo main.py ubicado en el directorio "gui", ádemas de contar con 
 Pycharm actualizado a su última versión, luego debe configurar "VCS root" de "Git" a "none", luego debe instalar el interprete de Python, ademas de instalar Pygame, ya sea por consola, 
 o directamente por Pycharm por medio de "InstallPackage" que es una funcion disponible al correr el main.py por primera vez.
 
