@@ -84,7 +84,7 @@ def ejecutar_juego_ia_con_fantasmas(mapa_layout=None):
     pantalla = pygame.display.set_mode((ANCHO, ALTO))
     pygame.display.set_caption("Pac-Man - IA con 2 fantasmas")
 
-    # --- Ruta de reportes ---
+    #Ruta de reportes
     ruta_base = os.path.dirname(os.path.dirname(__file__))  # .../PacmanLab
     ruta_performance = os.path.join(ruta_base, "log", "performance")
     os.makedirs(ruta_performance, exist_ok=True)
