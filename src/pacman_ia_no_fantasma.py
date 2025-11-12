@@ -230,11 +230,12 @@ def mostrar_resultado(pantalla, puntos, totales, pasos, duracion, vivo):
         pantalla.fill((0,0,0))
         ancho, alto = pantalla.get_size()
         espaciado = 32
-        alto_total = (len(lineas) - 1) * espaciado
+        textos = [fuente.render(t, True, (255,255,0)) for t in lineas]
+        max_ancho = max((txt.get_width() for txt in textos), default=0)
+        alto_total = len(textos) * espaciado
         inicio_y = (alto - alto_total) // 2
-        for i, t in enumerate(lineas):
-            txt = fuente.render(t, True, (255,255,0))
-            rect = txt.get_rect(center=(ancho // 2, inicio_y + i * espaciado))
-            pantalla.blit(txt, rect)
+        inicio_x = (ancho - max_ancho) // 2
+        for i, txt in enumerate(textos):
+            pantalla.blit(txt, (inicio_x, inicio_y + i * espaciado))
         pygame.display.flip()
         reloj.tick(30)
