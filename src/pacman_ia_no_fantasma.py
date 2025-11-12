@@ -85,7 +85,7 @@ def ejecutar_juego_ia_sin_fantasmas(mapa_layout=None):
 
     # --- Ruta de reportes ---
     ruta_base = os.path.dirname(os.path.dirname(__file__))  # .../PacmanLab
-    ruta_performance = os.path.join(ruta_base, "results", "performance")
+    ruta_performance = os.path.join(ruta_base, "log", "performance")
     os.makedirs(ruta_performance, exist_ok=True)
 
     mapa = [list(f) for f in layout_base]
