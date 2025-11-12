@@ -21,6 +21,23 @@ MAPA_DEFAULT = (
     "1111111111111111111111111111",
 )
 
+MAPA_DIFICIL_LAYOUT = (
+    "1111111111111111111111111111",
+    "1000000000110000000000000001",
+    "1011111110110111111111111101",
+    "1000000000000000000000000001",
+    "1011110111111111110111111101",
+    "1000000100000000010100000001",
+    "1111110110111111010111111111",
+    "1000000000001111010000000001",
+    "1011111111111111111111111101",
+    "1000000000000000000000000001",
+    "1111110111110111110111111111",
+    "1000000100000000000000000001",
+    "1011111111111111111111111101",
+    "1111111111111111111111111111",
+)
+
 
 def crear_animador(frames, velocidad_fps):
     return {
@@ -72,8 +89,16 @@ def ejecutar_juego_player(mapa_layout=None):
     pygame.init()
     pygame.font.init()
     TAM = 20
-    NEGRO, AZUL, AMARILLO, BLANCO = (0,0,0),(33,33,255),(255,255,0),(255,255,255)
+    NEGRO = (0, 0, 0)
+    AZUL = (33, 33, 255)
+    AMARILLO = (255, 255, 0)
+    BLANCO = (255, 255, 255)
+    VERDE = (0, 200, 0)
+    ROJO = (220, 20, 60)
     layout_base = mapa_layout if mapa_layout is not None else MAPA_DEFAULT
+    layout_tuple = tuple(layout_base)
+    es_mapa_facil = layout_tuple == MAPA_DEFAULT
+    es_mapa_dificil = layout_tuple == MAPA_DIFICIL_LAYOUT
     ancho_mapa_px = len(layout_base[0]) * TAM
     alto_mapa_px = len(layout_base) * TAM
     ESPACIO_INFO = 80
@@ -89,6 +114,8 @@ def ejecutar_juego_player(mapa_layout=None):
 
     # --- Mapa ---
     mapa = [list(f) for f in layout_base]
+    ancho_celdas = len(mapa[0]) if mapa else 0
+    alto_celdas = len(mapa)
 
     pacman_frames = cargar_animacion("Pacman.png", TAM)
     animacion_pacman = crear_animador(pacman_frames, PACMAN_VELOCIDAD_ANIM)
@@ -112,7 +139,14 @@ def ejecutar_juego_player(mapa_layout=None):
         for y, fila in enumerate(mapa):
             for x, c in enumerate(fila):
                 if c == "1":
-                    pygame.draw.rect(pantalla, AZUL, (x*TAM, y*TAM, TAM, TAM))
+                    borde = x == 0 or y == 0 or x == ancho_celdas - 1 or y == alto_celdas - 1
+                    color_pared = AZUL
+                    if borde:
+                        if es_mapa_facil:
+                            color_pared = VERDE
+                        elif es_mapa_dificil:
+                            color_pared = ROJO
+                    pygame.draw.rect(pantalla, color_pared, (x*TAM, y*TAM, TAM, TAM))
                 elif c == "0":
                     pygame.draw.circle(pantalla, BLANCO, (x*TAM+TAM//2, y*TAM+TAM//2), 3)
 
