@@ -23,6 +23,23 @@ MAPA_DEFAULT = (
     "1111111111111111111111111111",
 )
 
+MAPA_DIFICIL_LAYOUT = (
+    "1111111111111111111111111111",
+    "1000000000110000000000000001",
+    "1011111110110111111111111101",
+    "1000000000000000000000000001",
+    "1011110111111111110111111101",
+    "1000000100000000010100000001",
+    "1111110110111111010111111111",
+    "1000000000001111010000000001",
+    "1011111111111111111111111101",
+    "1000000000000000000000000001",
+    "1111110111110111110111111111",
+    "1000000100000000000000000001",
+    "1011111111111111111111111101",
+    "1111111111111111111111111111",
+)
+
 
 def crear_animador(frames, velocidad_fps):
     return {
@@ -74,8 +91,16 @@ def ejecutar_juego_ia_con_fantasmas(mapa_layout=None):
     pygame.init()
     pygame.font.init()
     TAM = 20
-    NEGRO, AZUL, AMARILLO, BLANCO, ROJO = (0,0,0),(33,33,255),(255,255,0),(255,255,255),(255,0,0)
+    NEGRO = (0, 0, 0)
+    AZUL = (33, 33, 255)
+    AMARILLO = (255, 255, 0)
+    BLANCO = (255, 255, 255)
+    ROJO = (220, 20, 60)
+    VERDE = (0, 200, 0)
     layout_base = mapa_layout if mapa_layout is not None else MAPA_DEFAULT
+    layout_tuple = tuple(layout_base)
+    es_mapa_facil = layout_tuple == MAPA_DEFAULT
+    es_mapa_dificil = layout_tuple == MAPA_DIFICIL_LAYOUT
     ancho_mapa_px = len(layout_base[0]) * TAM
     alto_mapa_px = len(layout_base) * TAM
     ESPACIO_INFO = 80
@@ -86,10 +111,12 @@ def ejecutar_juego_ia_con_fantasmas(mapa_layout=None):
 
     # --- Ruta de reportes ---
     ruta_base = os.path.dirname(os.path.dirname(__file__))  # .../PacmanLab
-    ruta_performance = os.path.join(ruta_base, "results", "performance")
+    ruta_performance = os.path.join(ruta_base, "log", "performance")
     os.makedirs(ruta_performance, exist_ok=True)
 
     mapa = [list(f) for f in layout_base]
+    ancho_celdas = len(mapa[0]) if mapa else 0
+    alto_celdas = len(mapa)
 
     pacman_frames = cargar_animacion("Pacman.png", TAM)
     animacion_pacman = crear_animador(pacman_frames, PACMAN_VELOCIDAD_ANIM)
@@ -122,6 +149,21 @@ def ejecutar_juego_ia_con_fantasmas(mapa_layout=None):
         dirs = [(1,0),(-1,0),(0,1),(0,-1)]
         return [(x+dx, y+dy) for dx,dy in dirs
                 if 0<=x+dx<len(mapa[0]) and 0<=y+dy<len(mapa) and mapa[y+dy][x+dx] != "1"]
+
+    def es_transitable(celda):
+        x, y = celda
+        return 0 <= x < len(mapa[0]) and 0 <= y < len(mapa) and mapa[y][x] != "1"
+
+    def direccion_desde_delta(dx, dy):
+        if dx > 0:
+            return "R"
+        if dx < 0:
+            return "L"
+        if dy > 0:
+            return "D"
+        if dy < 0:
+            return "U"
+        return "R"
 
     def bfs(origen, destino):
         cola = deque([origen])
@@ -248,6 +290,7 @@ def ejecutar_juego_ia_con_fantasmas(mapa_layout=None):
             pasos += 1
 
         # --- Movimiento de fantasmas: persecución BFS ---
+        fantasmas_prev = list(fantasmas)
         for i, (gx, gy) in enumerate(fantasmas):
             c = bfs((gx, gy), (pacman_x, pacman_y))
             nx, ny = gx, gy
@@ -262,6 +305,43 @@ def ejecutar_juego_ia_con_fantasmas(mapa_layout=None):
             elif ny < gy:
                 fantasmas_dir[i] = "U"
             fantasmas[i] = (nx, ny)
+
+        # Resolver colisiones entre fantasmas haciendo que se separen
+        ocupadas = {}
+        procesadas = set()
+        for idx, posicion in enumerate(fantasmas):
+            if posicion in ocupadas:
+                otro = ocupadas[posicion]
+                par = tuple(sorted((idx, otro)))
+                if par in procesadas:
+                    continue
+                procesadas.add(par)
+
+                prev_idx = fantasmas_prev[idx]
+                prev_otro = fantasmas_prev[otro]
+                nuevo_idx = fantasmas[idx]
+                nuevo_otro = fantasmas[otro]
+
+                dx_idx = nuevo_idx[0] - prev_idx[0]
+                dy_idx = nuevo_idx[1] - prev_idx[1]
+                dx_otro = nuevo_otro[0] - prev_otro[0]
+                dy_otro = nuevo_otro[1] - prev_otro[1]
+
+                fantasmas[idx] = prev_idx
+                fantasmas[otro] = prev_otro
+
+                retroceso_idx = (prev_idx[0] - dx_idx, prev_idx[1] - dy_idx)
+                if (dx_idx != 0 or dy_idx != 0) and es_transitable(retroceso_idx) and retroceso_idx != prev_otro:
+                    fantasmas[idx] = retroceso_idx
+
+                retroceso_otro = (prev_otro[0] - dx_otro, prev_otro[1] - dy_otro)
+                if (dx_otro != 0 or dy_otro != 0) and es_transitable(retroceso_otro) and retroceso_otro != fantasmas[idx]:
+                    fantasmas[otro] = retroceso_otro
+
+                fantasmas_dir[idx] = direccion_desde_delta(prev_idx[0] - nuevo_idx[0], prev_idx[1] - nuevo_idx[1])
+                fantasmas_dir[otro] = direccion_desde_delta(prev_otro[0] - nuevo_otro[0], prev_otro[1] - nuevo_otro[1])
+            else:
+                ocupadas[posicion] = idx
 
         # Colisión con fantasmas
         atrapado = False
@@ -290,7 +370,14 @@ def ejecutar_juego_ia_con_fantasmas(mapa_layout=None):
         for y, fila in enumerate(mapa):
             for x, c in enumerate(fila):
                 if c == "1":
-                    pygame.draw.rect(pantalla, AZUL, (x*TAM, y*TAM, TAM, TAM))
+                    borde = x == 0 or y == 0 or x == ancho_celdas - 1 or y == alto_celdas - 1
+                    color_pared = AZUL
+                    if borde:
+                        if es_mapa_facil:
+                            color_pared = VERDE
+                        elif es_mapa_dificil:
+                            color_pared = ROJO
+                    pygame.draw.rect(pantalla, color_pared, (x*TAM, y*TAM, TAM, TAM))
                 elif c == "0":
                     pygame.draw.circle(pantalla, BLANCO, (x*TAM+TAM//2, y*TAM+TAM//2), 3)
         frame_base_pacman = avanzar_animacion(animacion_pacman, dt)
@@ -356,8 +443,14 @@ def mostrar_resultado(pantalla, puntos, totales, pasos, duracion, muertes, vivo)
                 return
 
         pantalla.fill((0,0,0))
-        for i, t in enumerate(lineas):
-            txt = fuente.render(t, True, (255,255,0))
-            pantalla.blit(txt, (60, 80 + i*30))
+        ancho, alto = pantalla.get_size()
+        espaciado = 32
+        textos = [fuente.render(t, True, (255,255,0)) for t in lineas]
+        max_ancho = max((txt.get_width() for txt in textos), default=0)
+        alto_total = len(textos) * espaciado
+        inicio_y = (alto - alto_total) // 2
+        inicio_x = (ancho - max_ancho) // 2
+        for i, txt in enumerate(textos):
+            pantalla.blit(txt, (inicio_x, inicio_y + i * espaciado))
         pygame.display.flip()
         reloj.tick(30)
