@@ -409,8 +409,13 @@ def mostrar_resultado(pantalla, puntos, totales, pasos, duracion, muertes, vivo)
                 return
 
         pantalla.fill((0,0,0))
+        ancho, alto = pantalla.get_size()
+        espaciado = 32
+        alto_total = (len(lineas) - 1) * espaciado
+        inicio_y = (alto - alto_total) // 2
         for i, t in enumerate(lineas):
             txt = fuente.render(t, True, (255,255,0))
-            pantalla.blit(txt, (60, 80 + i*30))
+            rect = txt.get_rect(center=(ancho // 2, inicio_y + i * espaciado))
+            pantalla.blit(txt, rect)
         pygame.display.flip()
         reloj.tick(30)
