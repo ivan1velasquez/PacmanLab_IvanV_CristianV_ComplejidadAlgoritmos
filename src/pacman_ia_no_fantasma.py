@@ -85,7 +85,7 @@ def ejecutar_juego_ia_sin_fantasmas(mapa_layout=None):
 
     # --- Ruta de reportes ---
     ruta_base = os.path.dirname(os.path.dirname(__file__))  # .../PacmanLab
-    ruta_performance = os.path.join(ruta_base, "results", "performance")
+    ruta_performance = os.path.join(ruta_base, "log", "performance")
     os.makedirs(ruta_performance, exist_ok=True)
 
     mapa = [list(f) for f in layout_base]
@@ -228,8 +228,14 @@ def mostrar_resultado(pantalla, puntos, totales, pasos, duracion, vivo):
                 return
 
         pantalla.fill((0,0,0))
-        for i, t in enumerate(lineas):
-            txt = fuente.render(t, True, (255,255,0))
-            pantalla.blit(txt, (60, 80 + i*30))
+        ancho, alto = pantalla.get_size()
+        espaciado = 32
+        textos = [fuente.render(t, True, (255,255,0)) for t in lineas]
+        max_ancho = max((txt.get_width() for txt in textos), default=0)
+        alto_total = len(textos) * espaciado
+        inicio_y = (alto - alto_total) // 2
+        inicio_x = (ancho - max_ancho) // 2
+        for i, txt in enumerate(textos):
+            pantalla.blit(txt, (inicio_x, inicio_y + i * espaciado))
         pygame.display.flip()
         reloj.tick(30)
