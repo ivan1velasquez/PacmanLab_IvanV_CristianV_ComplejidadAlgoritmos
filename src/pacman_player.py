@@ -84,7 +84,7 @@ def ejecutar_juego_player(mapa_layout=None):
 
     # --- Ruta de reportes ---
     ruta_base = os.path.dirname(os.path.dirname(__file__))  # .../PacmanLab
-    ruta_performance = os.path.join(ruta_base, "results", "performance")
+    ruta_performance = os.path.join(ruta_base, "log", "performance")
     os.makedirs(ruta_performance, exist_ok=True)
 
     # --- Mapa ---
@@ -214,8 +214,13 @@ def mostrar_resultado(pantalla, puntos, totales, pasos, duracion, vivo):
                 return
 
         pantalla.fill((0,0,0))
+        ancho, alto = pantalla.get_size()
+        espaciado = 32
+        alto_total = (len(lineas) - 1) * espaciado
+        inicio_y = (alto - alto_total) // 2
         for i, t in enumerate(lineas):
             txt = fuente.render(t, True, (255,255,0))
-            pantalla.blit(txt, (60, 80 + i*30))
+            rect = txt.get_rect(center=(ancho // 2, inicio_y + i * espaciado))
+            pantalla.blit(txt, rect)
         pygame.display.flip()
         reloj.tick(30)
