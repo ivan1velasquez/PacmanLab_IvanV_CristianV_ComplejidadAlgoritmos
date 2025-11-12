@@ -35,7 +35,7 @@ cuando colisionan; las estadísticas incluyen muertes acumuladas.
 
 REPORTES Y VISUALIZACION
 
-Los tres modos registran archivos de desempeño con puntos, pasos y duración en results/performance, y emplean pantallas finales interactivas 
+Los tres modos registran archivos de desempeño con puntos, pasos y duración en log/performance, y emplean pantallas finales interactivas 
 para mostrar los mismos indicadores dentro del juego.
 
 
