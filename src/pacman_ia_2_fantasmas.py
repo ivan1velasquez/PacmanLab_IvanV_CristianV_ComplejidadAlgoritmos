@@ -75,6 +75,9 @@ def ejecutar_juego_ia_con_fantasmas(mapa_layout=None):
     TAM = 20
     NEGRO, AZUL, AMARILLO, BLANCO = (0, 0, 0), (33, 33, 255), (255, 255, 0), (255, 255, 255)
     layout_base = mapa_layout if mapa_layout is not None else MAPA_DEFAULT
+    layout_tuple = tuple(layout_base)
+    es_mapa_facil = layout_tuple == MAPA_DEFAULT
+    es_mapa_dificil = layout_tuple == MAPA_DIFICIL_LAYOUT
     ancho_mapa_px = len(layout_base[0]) * TAM
     alto_mapa_px = len(layout_base) * TAM
     ESPACIO_INFO = 80
@@ -83,12 +86,14 @@ def ejecutar_juego_ia_con_fantasmas(mapa_layout=None):
     pantalla = pygame.display.set_mode((ANCHO, ALTO))
     pygame.display.set_caption("Pac-Man - IA con 2 fantasmas")
 
-    # --- Ruta de reportes ---
+    #Ruta de reportes
     ruta_base = os.path.dirname(os.path.dirname(__file__))  # .../PacmanLab
     ruta_performance = os.path.join(ruta_base, "log", "performance")
     os.makedirs(ruta_performance, exist_ok=True)
 
     mapa = [list(f) for f in layout_base]
+    ancho_celdas = len(mapa[0]) if mapa else 0
+    alto_celdas = len(mapa)
 
     pacman_frames = cargar_animacion("Pacman.png", TAM)
     animacion_pacman = crear_animador(pacman_frames, PACMAN_VELOCIDAD_ANIM)
@@ -342,7 +347,14 @@ def ejecutar_juego_ia_con_fantasmas(mapa_layout=None):
         for y, fila in enumerate(mapa):
             for x, c in enumerate(fila):
                 if c == "1":
-                    pygame.draw.rect(pantalla, AZUL, (x*TAM, y*TAM, TAM, TAM))
+                    borde = x == 0 or y == 0 or x == ancho_celdas - 1 or y == alto_celdas - 1
+                    color_pared = AZUL
+                    if borde:
+                        if es_mapa_facil:
+                            color_pared = VERDE
+                        elif es_mapa_dificil:
+                            color_pared = ROJO
+                    pygame.draw.rect(pantalla, color_pared, (x*TAM, y*TAM, TAM, TAM))
                 elif c == "0":
                     pygame.draw.circle(pantalla, BLANCO, (x*TAM+TAM//2, y*TAM+TAM//2), 3)
         frame_base_pacman = avanzar_animacion(animacion_pacman, dt)
