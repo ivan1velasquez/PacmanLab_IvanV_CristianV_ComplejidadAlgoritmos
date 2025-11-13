@@ -1,25 +1,24 @@
-import pygame, os, time
+import os
+import sys
+import time
+
+import pygame
 
 
 RUTA_BASE = os.path.dirname(os.path.dirname(__file__))
+if RUTA_BASE not in sys.path:
+    sys.path.append(RUTA_BASE)
+
+from data import mapas as mapas_data
+
+
 RUTA_IMAGENES = os.path.join(RUTA_BASE, "images")
 
 PACMAN_VELOCIDAD_ANIM = 5  # Fotogramas de animación por segundo
 
-MAPA_DEFAULT = (
-    "1111111111111111111111111111",
-    "1000000000110000000000000001",
-    "1011111110110111111111111101",
-    "1011111110110111111111111101",
-    "1000000000000000000000000001",
-    "1011110111111111110111111101",
-    "1000000100000000000100000001",
-    "1111110110111111010111111111",
-    "1000000000001111000000000001",
-    "1011111111111111111111111101",
-    "1000000000000000000000000001",
-    "1111111111111111111111111111",
-)
+MAPA_DEFAULT_CONFIG = mapas_data.mapa_facil
+MAPA_DEFAULT = MAPA_DEFAULT_CONFIG["layout"]
+COLOR_MUROS_DEFAULT = MAPA_DEFAULT_CONFIG["color"]
 
 
 def crear_animador(frames, velocidad_fps):
@@ -72,8 +71,10 @@ def ejecutar_juego_player(mapa_layout=None):
     pygame.init()
     pygame.font.init()
     TAM = 20
-    NEGRO, AZUL, AMARILLO, BLANCO = (0,0,0),(33,33,255),(255,255,0),(255,255,255)
-    layout_base = mapa_layout if mapa_layout is not None else MAPA_DEFAULT
+    NEGRO, AMARILLO, BLANCO = (0,0,0),(255,255,0),(255,255,255)
+    configuracion_mapa = mapa_layout if mapa_layout is not None else MAPA_DEFAULT_CONFIG
+    layout_base = configuracion_mapa["layout"]
+    color_muros = configuracion_mapa.get("color", COLOR_MUROS_DEFAULT)
     ancho_mapa_px = len(layout_base[0]) * TAM
     alto_mapa_px = len(layout_base) * TAM
     ESPACIO_INFO = 80
@@ -112,7 +113,7 @@ def ejecutar_juego_player(mapa_layout=None):
         for y, fila in enumerate(mapa):
             for x, c in enumerate(fila):
                 if c == "1":
-                    pygame.draw.rect(pantalla, AZUL, (x*TAM, y*TAM, TAM, TAM))
+                    pygame.draw.rect(pantalla, color_muros, (x*TAM, y*TAM, TAM, TAM))
                 elif c == "0":
                     pygame.draw.circle(pantalla, BLANCO, (x*TAM+TAM//2, y*TAM+TAM//2), 3)
 
