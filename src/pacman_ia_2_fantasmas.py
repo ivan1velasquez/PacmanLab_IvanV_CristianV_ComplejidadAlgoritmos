@@ -74,7 +74,6 @@ def ejecutar_juego_ia_con_fantasmas(mapa_layout=None):
     pygame.font.init()
     TAM = 20
     NEGRO, AZUL, AMARILLO, BLANCO = (0, 0, 0), (33, 33, 255), (255, 255, 0), (255, 255, 255)
-    ROJO = (220, 20, 60)
     layout_base = mapa_layout if mapa_layout is not None else MAPA_DEFAULT
     layout_tuple = tuple(layout_base)
     es_mapa_facil = layout_tuple == MAPA_DEFAULT
