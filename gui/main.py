@@ -26,7 +26,7 @@ def inicializar_menu():
     fuente_opcion = pygame.font.SysFont("arial", 28)
     fuente_creditos = pygame.font.SysFont("arial", 18)
 
-# --- Rutas ---
+# Rutas
 ruta_base = os.path.dirname(os.path.dirname(__file__))
 ruta_src = os.path.join(ruta_base, "src")
 ruta_data = os.path.join(ruta_base, "data")

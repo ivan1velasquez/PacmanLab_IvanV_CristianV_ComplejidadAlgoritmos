@@ -74,6 +74,9 @@ def ejecutar_juego_ia_sin_fantasmas(mapa_layout=None):
     TAM = 20
     NEGRO, AZUL, AMARILLO, BLANCO = (0, 0, 0), (33, 33, 255), (255, 255, 0), (255, 255, 255)
     layout_base = mapa_layout if mapa_layout is not None else MAPA_DEFAULT
+    layout_tuple = tuple(layout_base)
+    es_mapa_facil = layout_tuple == MAPA_DEFAULT
+    es_mapa_dificil = layout_tuple == MAPA_DIFICIL_LAYOUT
     ancho_mapa_px = len(layout_base[0]) * TAM
     alto_mapa_px = len(layout_base) * TAM
     ESPACIO_INFO = 80
@@ -88,6 +91,8 @@ def ejecutar_juego_ia_sin_fantasmas(mapa_layout=None):
     os.makedirs(ruta_performance, exist_ok=True)
 
     mapa = [list(f) for f in layout_base]
+    ancho_celdas = len(mapa[0]) if mapa else 0
+    alto_celdas = len(mapa)
     pacman_frames = cargar_animacion("Pacman.png", TAM)
     animacion_pacman = crear_animador(pacman_frames, PACMAN_VELOCIDAD_ANIM)
     pacman_dir = "R"
