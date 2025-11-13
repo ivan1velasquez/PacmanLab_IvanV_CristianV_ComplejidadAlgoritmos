@@ -39,4 +39,4 @@ Los tres modos registran archivos de desempeño con puntos, pasos y duración en
 para mostrar los mismos indicadores dentro del juego.
 
 
-------------Versión MVP 1.2----------------
+------------Versión 1.2.1----------------
