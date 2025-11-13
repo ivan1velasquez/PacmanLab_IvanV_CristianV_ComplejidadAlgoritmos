@@ -10,12 +10,10 @@ RUTA_BASE = os.path.dirname(os.path.dirname(__file__))
 if RUTA_BASE not in sys.path:
     sys.path.append(RUTA_BASE)
 
-from data import mapas as mapas_data
+from data import config, mapas as mapas_data
 
 
 RUTA_IMAGENES = os.path.join(RUTA_BASE, "images")
-
-PACMAN_VELOCIDAD_ANIM = 5  # Fotogramas de animación por segundo
 
 MAPA_DEFAULT_CONFIG = mapas_data.mapa_facil
 MAPA_DEFAULT = MAPA_DEFAULT_CONFIG["layout"]
@@ -71,15 +69,15 @@ def orientar_frame(frame, direccion):
 def ejecutar_juego_ia_sin_fantasmas(mapa_layout=None):
     pygame.init()
     pygame.font.init()
-    TAM = 20
+    TAM = config.TAM_CELDA
     NEGRO, AMARILLO, BLANCO = (0,0,0),(255,255,0),(255,255,255)
     configuracion_mapa = mapa_layout if mapa_layout is not None else MAPA_DEFAULT_CONFIG
     layout_base = configuracion_mapa["layout"]
     color_muros = configuracion_mapa.get("color", COLOR_MUROS_DEFAULT)
     ancho_mapa_px = len(layout_base[0]) * TAM
     alto_mapa_px = len(layout_base) * TAM
-    ESPACIO_INFO = 80
-    ANCHO = max(ancho_mapa_px, 400)
+    ESPACIO_INFO = config.ESPACIO_INFO
+    ANCHO = max(ancho_mapa_px, config.ANCHO_MINIMO_VENTANA)
     ALTO = alto_mapa_px + ESPACIO_INFO
     pantalla = pygame.display.set_mode((ANCHO, ALTO))
     pygame.display.set_caption("Pac-Man - IA sin fantasmas")
@@ -91,10 +89,10 @@ def ejecutar_juego_ia_sin_fantasmas(mapa_layout=None):
 
     mapa = [list(f) for f in layout_base]
     pacman_frames = cargar_animacion("Pacman.png", TAM)
-    animacion_pacman = crear_animador(pacman_frames, PACMAN_VELOCIDAD_ANIM)
+    animacion_pacman = crear_animador(pacman_frames, config.PACMAN_ANIMACION_FPS)
     pacman_dir = "R"
 
-    pacman_x, pacman_y = 1, 1
+    pacman_x, pacman_y = config.PACMAN_SPAWN_DEFAULT
     puntos_totales = sum(f.count("0") for f in mapa)
     puntos = 0
     pasos = 0
@@ -136,7 +134,7 @@ def ejecutar_juego_ia_sin_fantasmas(mapa_layout=None):
     camino = []
 
     while True:
-        dt = reloj.tick(10)
+        dt = reloj.tick(config.IA_PACMAN_TICK_RATE)
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 duracion = time.time() - inicio

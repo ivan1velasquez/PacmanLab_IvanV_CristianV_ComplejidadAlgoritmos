@@ -12,13 +12,10 @@ RUTA_BASE = os.path.dirname(os.path.dirname(__file__))
 if RUTA_BASE not in sys.path:
     sys.path.append(RUTA_BASE)
 
-from data import mapas as mapas_data
+from data import config, mapas as mapas_data
 
 
 RUTA_IMAGENES = os.path.join(RUTA_BASE, "images")
-
-PACMAN_VELOCIDAD_ANIM = 5  # Fotogramas de animación por segundo
-FANTASMA_VELOCIDAD_ANIM = 7  # Fotogramas de animación por segundo
 
 MAPA_DEFAULT_CONFIG = mapas_data.mapa_facil
 MAPA_DEFAULT = MAPA_DEFAULT_CONFIG["layout"]
@@ -74,15 +71,15 @@ def orientar_frame(frame, direccion):
 def ejecutar_juego_ia_con_fantasmas(mapa_layout=None):
     pygame.init()
     pygame.font.init()
-    TAM = 20
+    TAM = config.TAM_CELDA
     NEGRO, AMARILLO, BLANCO, ROJO = (0,0,0),(255,255,0),(255,255,255),(255,0,0)
     configuracion_mapa = mapa_layout if mapa_layout is not None else MAPA_DEFAULT_CONFIG
     layout_base = configuracion_mapa["layout"]
     color_muros = configuracion_mapa.get("color", COLOR_MUROS_DEFAULT)
     ancho_mapa_px = len(layout_base[0]) * TAM
     alto_mapa_px = len(layout_base) * TAM
-    ESPACIO_INFO = 80
-    ANCHO = max(ancho_mapa_px, 400)
+    ESPACIO_INFO = config.ESPACIO_INFO
+    ANCHO = max(ancho_mapa_px, config.ANCHO_MINIMO_VENTANA)
     ALTO = alto_mapa_px + ESPACIO_INFO
     pantalla = pygame.display.set_mode((ANCHO, ALTO))
     pygame.display.set_caption("Pac-Man - IA con 2 fantasmas")
@@ -95,27 +92,20 @@ def ejecutar_juego_ia_con_fantasmas(mapa_layout=None):
     mapa = [list(f) for f in layout_base]
 
     pacman_frames = cargar_animacion("Pacman.png", TAM)
-    animacion_pacman = crear_animador(pacman_frames, PACMAN_VELOCIDAD_ANIM)
+    animacion_pacman = crear_animador(pacman_frames, config.PACMAN_ANIMACION_FPS)
     pacman_dir = "R"
 
     fantasma_frames = cargar_animacion("redGhost.png", TAM)
-    animacion_fantasma = crear_animador(fantasma_frames, FANTASMA_VELOCIDAD_ANIM)
+    animacion_fantasma = crear_animador(fantasma_frames, config.FANTASMA_ANIMACION_FPS)
 
-    pacman_frames = cargar_animacion("Pacman.png", TAM)
-    animacion_pacman = crear_animador(pacman_frames, PACMAN_VELOCIDAD_ANIM)
-    pacman_dir = "R"
-
-    fantasma_frames = cargar_animacion("redGhost.png", TAM)
-    animacion_fantasma = crear_animador(fantasma_frames, FANTASMA_VELOCIDAD_ANIM)
-
-    pacman_x, pacman_y = 1, 1
+    pacman_x, pacman_y = config.PACMAN_SPAWN_DEFAULT
     spawn_inicial = (pacman_x, pacman_y)
     puntos_restantes = {(x, y) for y, fila in enumerate(mapa) for x, celda in enumerate(fila) if celda == "0"}
     puntos_totales = len(puntos_restantes)
     puntos = 0
     pasos = 0
     muertes = 0
-    factor_miedo = 1.0
+    factor_miedo = config.FACTOR_MIEDO_BASE
     reloj = pygame.time.Clock()
     inicio = time.time()
     fuente_contador = pygame.font.SysFont("arial", 24)
@@ -223,7 +213,7 @@ def ejecutar_juego_ia_con_fantasmas(mapa_layout=None):
     vivo = True
 
     while True:
-        dt = reloj.tick(10)
+        dt = reloj.tick(config.IA_PACMAN_TICK_RATE)
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 duracion = time.time() - inicio
@@ -329,7 +319,7 @@ def ejecutar_juego_ia_con_fantasmas(mapa_layout=None):
         if atrapado:
             vivo = False
             muertes += 1
-            factor_miedo = 1.0 + muertes * 0.5
+            factor_miedo = config.FACTOR_MIEDO_BASE + muertes * config.FACTOR_MIEDO_INCREMENTO
             pacman_x, pacman_y = spawn_inicial
             pacman_dir = "R"
             camino = []
@@ -422,4 +412,4 @@ def mostrar_resultado(pantalla, puntos, totales, pasos, duracion, muertes, vivo)
         for i, txt in enumerate(textos):
             pantalla.blit(txt, (inicio_x, inicio_y + i * espaciado))
         pygame.display.flip()
-        reloj.tick(30)
+        reloj.tick(config.RESULTADO_TICK_RATE)
