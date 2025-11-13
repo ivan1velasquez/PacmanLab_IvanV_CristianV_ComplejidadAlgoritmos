@@ -22,7 +22,6 @@ MAPA_DEFAULT = (
     "1111111111111111111111111111",
 )
 
-
 def crear_animador(frames, velocidad_fps):
     return {
         "frames": frames,
@@ -73,7 +72,7 @@ def ejecutar_juego_ia_sin_fantasmas(mapa_layout=None):
     pygame.init()
     pygame.font.init()
     TAM = 20
-    NEGRO, AZUL, AMARILLO, BLANCO = (0,0,0),(33,33,255),(255,255,0),(255,255,255)
+    NEGRO, AZUL, AMARILLO, BLANCO = (0, 0, 0), (33, 33, 255), (255, 255, 0), (255, 255, 255)
     layout_base = mapa_layout if mapa_layout is not None else MAPA_DEFAULT
     ancho_mapa_px = len(layout_base[0]) * TAM
     alto_mapa_px = len(layout_base) * TAM
@@ -85,7 +84,7 @@ def ejecutar_juego_ia_sin_fantasmas(mapa_layout=None):
 
     # --- Ruta de reportes ---
     ruta_base = os.path.dirname(os.path.dirname(__file__))  # .../PacmanLab
-    ruta_performance = os.path.join(ruta_base, "results", "performance")
+    ruta_performance = os.path.join(ruta_base, "log", "performance")
     os.makedirs(ruta_performance, exist_ok=True)
 
     mapa = [list(f) for f in layout_base]
@@ -173,8 +172,10 @@ def ejecutar_juego_ia_sin_fantasmas(mapa_layout=None):
         pantalla.fill(NEGRO)
         for y, fila in enumerate(mapa):
             for x, c in enumerate(fila):
-                if c == "1": pygame.draw.rect(pantalla, AZUL, (x*TAM, y*TAM, TAM, TAM))
-                elif c == "0": pygame.draw.circle(pantalla, BLANCO, (x*TAM+TAM//2, y*TAM+TAM//2), 3)
+                if c == "1":
+                    pygame.draw.rect(pantalla, AZUL, (x*TAM, y*TAM, TAM, TAM))
+                elif c == "0":
+                    pygame.draw.circle(pantalla, BLANCO, (x*TAM+TAM//2, y*TAM+TAM//2), 3)
         frame_base = avanzar_animacion(animacion_pacman, dt)
         frame_actual = orientar_frame(frame_base, pacman_dir)
         rect_pacman = frame_actual.get_rect(center=(pacman_x*TAM+TAM//2, pacman_y*TAM+TAM//2))
@@ -228,8 +229,14 @@ def mostrar_resultado(pantalla, puntos, totales, pasos, duracion, vivo):
                 return
 
         pantalla.fill((0,0,0))
-        for i, t in enumerate(lineas):
-            txt = fuente.render(t, True, (255,255,0))
-            pantalla.blit(txt, (60, 80 + i*30))
+        ancho, alto = pantalla.get_size()
+        espaciado = 32
+        textos = [fuente.render(t, True, (255,255,0)) for t in lineas]
+        max_ancho = max((txt.get_width() for txt in textos), default=0)
+        alto_total = len(textos) * espaciado
+        inicio_y = (alto - alto_total) // 2
+        inicio_x = (ancho - max_ancho) // 2
+        for i, txt in enumerate(textos):
+            pantalla.blit(txt, (inicio_x, inicio_y + i * espaciado))
         pygame.display.flip()
         reloj.tick(30)
