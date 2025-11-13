@@ -1,13 +1,7 @@
-import pygame
-import sys
-import os
-import time
-from collections import deque
-import random
+"""Definiciones de mapas y configuraciones de color."""
 
-# --- MAPA ---
 
-mapa_primero = [
+MAPA_FACIL_LAYOUT = (
     "1111111111111111111111111111",
     "1000000000110000000000000001",
     "1011111110110111111111111101",
@@ -20,9 +14,9 @@ mapa_primero = [
     "1011111111111111111111111101",
     "1000000000000000000000000001",
     "1111111111111111111111111111",
-]
+)
 
-mapa_dificil = [
+MAPA_DIFICIL_LAYOUT = (
     "1111111111111111111111111111",
     "1000000000110000000000000001",
     "1011111110110111111111111101",
@@ -37,9 +31,9 @@ mapa_dificil = [
     "1000000100000000000000000001",
     "1011111111111111111111111101",
     "1111111111111111111111111111",
-]
+)
 
-mapa_facil = [
+MAPA_CLASICO_LAYOUT = (
     "1111111111111111111111111111",
     "1000000000000000000000000001",
     "1011110111110111111011111101",
@@ -52,4 +46,25 @@ mapa_facil = [
     "1111101011011111011101111111",
     "1000000000000000000000000001",
     "1111111111111111111111111111",
-]
+)
+
+mapa_facil = {
+    "layout": MAPA_FACIL_LAYOUT,
+    "color": (0, 200, 0),
+}
+
+mapa_clasico = {
+    "layout": MAPA_CLASICO_LAYOUT,
+    "color": (33, 33, 255),
+}
+
+mapa_dificil = {
+    "layout": MAPA_DIFICIL_LAYOUT,
+    "color": (255, 0, 0),
+}
+
+MAPAS = {
+    "mapa_facil": mapa_facil,
+    "mapa_clasico": mapa_clasico,
+    "mapa_dificil": mapa_dificil,
+}
