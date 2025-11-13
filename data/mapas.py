@@ -1,4 +1,4 @@
-"""Definiciones de mapas y configuraciones de color."""
+#Definiciones de mapas y configuraciones de color.
 
 
 MAPA_FACIL_LAYOUT = (
