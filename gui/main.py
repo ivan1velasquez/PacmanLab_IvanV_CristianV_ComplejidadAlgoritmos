@@ -26,7 +26,7 @@ def inicializar_menu():
     fuente_opcion = pygame.font.SysFont("arial", 28)
     fuente_creditos = pygame.font.SysFont("arial", 18)
 
-# --- Rutas ---
+# Rutas
 ruta_base = os.path.dirname(os.path.dirname(__file__))
 ruta_src = os.path.join(ruta_base, "src")
 ruta_data = os.path.join(ruta_base, "data")
@@ -46,9 +46,9 @@ def cargar_modulo(nombre_archivo):
 mapas_mod = cargar_modulo_desde_ruta(os.path.join(ruta_data, "mapas.py"))
 
 MAPAS_DISPONIBLES = [
-    ("Mapa fácil", tuple(mapas_mod.mapa_primero)),
-    ("Mapa clásico", tuple(mapas_mod.mapa_facil)),
-    ("Mapa difícil", tuple(mapas_mod.mapa_dificil)),
+    ("Mapa fácil", mapas_mod.mapa_facil),
+    ("Mapa clásico", mapas_mod.mapa_clasico),
+    ("Mapa difícil", mapas_mod.mapa_dificil),
 ]
 
 # --- Escenarios disponibles ---
